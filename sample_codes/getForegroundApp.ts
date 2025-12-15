@@ -1,13 +1,15 @@
 // NSWorkspace.shared.frontmostApplication node-ffi / N-API
 
 import ffi from "ffi-napi";
-import ref from "ref-napi";
+// import ref from "ref-napi";
 import StructType from "ref-struct-napi";
 import os from "os";
 import { execFileSync } from "child_process";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { getActiveBrowserTabTitleMac } from "./getBrowserTabTitleMac";
+
 
 // Resolve directory in both ESM (import.meta.url) and CommonJS (__dirname) runtimes.
 let __dirnamePath: string;
@@ -98,6 +100,7 @@ function macApi() {
       } catch (e) {
         // fallback: tab-separated fallback format
         const parts = out.split('\t');
+        
         return {
           appDisplayName: parts[0] || "",
           appExecutable: parts[1] || "",

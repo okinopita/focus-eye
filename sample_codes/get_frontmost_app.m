@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
         NSDictionary *out = @{
             @"appDisplayName": appDisplayName,
             @"appExecutable": appExecutable,
-            @"windowTitle": windowTitle
+            @"browsing": windowTitle
         };
 
         NSError *err = nil;

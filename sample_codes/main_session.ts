@@ -5,7 +5,7 @@ import { log } from 'console';
 const SESSION_TIME = 50 * 1000; // セッション時間のミリ秒
 const checkIntervalFactor = 1.0;
 const MIN_INTERVAL_MS = 5000;
-const MAX_INTERVAL_MS = 15000;
+const MAX_INTERVAL_MS = 6000;
 
 type checked = {
   appName: string;

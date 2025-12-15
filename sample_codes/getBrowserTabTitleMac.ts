@@ -17,9 +17,11 @@ const appleScriptCommands: Record<string, string> = {
  * @param appName The browser application name (e.g., "Google Chrome", "Safari")
  * @returns Promise<string> The active tab title, or empty string if not available
  */
-export async function getActiveBrowserTabTitle(appName: string): Promise<string> {
+export async function getActiveBrowserTabTitleMac(appName: string): Promise<string> {
   const script = appleScriptCommands[appName];
   if (!script) {
+    console.log("unknown browser");
+    
     return ""; // Not a known browser
   }
   try {
@@ -27,8 +29,12 @@ export async function getActiveBrowserTabTitle(appName: string): Promise<string>
       timeout: 2000,
       encoding: "utf8",
     });
+    console.log("stdout from browsertabtitle " + stdout.trim());
+    
     return stdout.trim();
   } catch (e) {
+    console.log("error: " + e);
+
     // AppleScript execution failed or timed out
     return "";
   }
