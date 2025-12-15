@@ -1,0 +1,829 @@
+launchd
+logd
+smd
+UserEventAgent
+fseventsd
+mediaremoted
+systemstats
+accessoryupdaterd
+configd
+endpointsecurityd
+powerd
+amfid
+remoted
+keybagd
+softwareupdated
+watchdogd
+mds
+iconservicesd
+kernelmanagerd
+diskarbitrationd
+coreduetd
+syslogd
+thermalmonitord
+opendirectoryd
+apsd
+launchservicesd
+timed
+usbmuxd
+securityd
+locationd
+nesessionmanager
+autofsd
+displaypolicyd
+dasd
+distnoted
+AppleCredentialManagerDaemon
+dirhelper
+logind
+revisiond
+KernelEventAgent
+usermanagerd
+bluetoothd
+notifyd
+sandboxd
+corebrightnessd
+AirPlayXPCHelper
+com.apple.cmio.registerassistantservice
+WindowServer
+tccd
+aslmanager
+cfprefsd
+analyticsd
+loginwindow
+runningboardd
+containermanagerd_system
+coreservicesd
+backgroundtaskmanagementd
+contextstored
+PowerUIAgent
+logd_helper
+lsd
+findmydeviced
+nehelper
+airportd
+symptomsd
+mDNSResponder
+biomed
+csnameddatad
+mobileassetd
+coreaudiod
+corekdld
+bosUpdateProxy
+SubmitDiagInfo
+mDNSResponderHelper
+trustdFileHelper
+distnoted
+sysextd
+multiversed
+com.apple.ifdreader
+nsurlsessiond
+apfsd
+usbd
+distnoted
+authd
+cryptexd
+socketfilterfw
+installerdiagwatcher
+tzd
+VDCAssistant
+com.apple.CodeSigningHelper
+distnoted
+systemstatusd
+com.apple.geod
+distnoted
+secinitd
+cfprefsd
+secinitd
+fskit_helper
+containermanagerd
+storagekitd
+cameracaptured
+securityd_system
+com.docker.vmnetd
+UVCAssistant
+softwareupdated
+com.apple.MobileSoftwareUpdate.CleanupPreparePathService
+syspolicyd
+distnoted
+backupd
+mobileactivationd
+Core Audio Driver (MSTeamsAudioDevice.driver)
+com.apple.audio.DriverHelper
+PlugInLibraryService
+distnoted
+searchpartyd
+suhelperd
+AudioComponentRegistrar
+com.apple.audio.SandboxHelper
+biometrickitd
+backupd-helper
+audioclocksyncd
+UARPUpdaterServiceHID
+UARPUpdaterServiceDisplay
+UARPUpdaterServiceUSBPD
+UARPUpdaterServiceDFU
+UARPUpdaterServiceLegacyAudio
+UARPUpdaterServiceAFU
+distnoted
+ThunderboltAccessoryUpdaterService
+containermanagerd
+mds_stores
+wifip2pd
+distnoted
+com.apple.DriverKit-IOUserDockChannelSerial
+com.apple.AppleUserHIDDrivers
+thermald
+WiFiCloudAssetsXPCService
+eligibilityd
+hidd
+distnoted
+WirelessRadioManagerd
+BlueTool
+findmybeaconingd
+nfcd
+wifianalyticsd
+NFStorageServer
+distnoted
+powerexperienced
+akd
+adid
+PerfPowerTelemetryClientRegistrationService
+TouchBarServer
+colorsync.displayservices
+com.apple.ColorSyncXPCAgent
+colorsyncd
+appleeventsd
+aneuserd
+aned
+online-auth-agent
+captiveagent
+symptomsd-diag
+sysmond
+ViewBridgeAuxiliary
+bootinstalld
+systemstats
+com.apple.AccountPolicyHelper
+sharedfilelistd
+GSSCred
+countryd
+coreauthd
+applekeystored
+distnoted
+cfprefsd
+UserEventAgent
+gamecontrollerd
+seld
+knowledge-agent
+ContinuityCaptureAgent
+CoreServicesUIAgent
+universalaccessd
+com.apple.sbd
+BackgroundTaskManagementAgent
+pboard
+lsd
+containermanagerd
+tccd
+csnameddatad
+rapportd
+secd
+trustd
+BiomeAgent
+cloudd
+accountsd
+assistantd
+ndoagent
+icloudmailagent
+triald
+cdpd
+talagentd
+TrustedPeersHelper
+identityservicesd
+WindowManager
+usernotificationsd
+nsurlsessiond
+rtcreportingd
+spindump
+distnoted
+CommCenter
+APFSUserAgent
+IOUIAgent
+lockoutagent
+ControlStrip
+secinitd
+ContextStoreAgent
+routined
+usernoted
+AppSSOAgent
+dmd
+ScreenTimeAgent
+distnoted
+Notes
+com.apple.hiservices-xpcservice
+pkd
+WiFiAgent
+syncdefaultsd
+transparencyd
+ctkd
+studentd
+ctkd
+fileproviderd
+coreauthd
+MSTeams
+ManagedSettingsAgent
+sharingd
+deleted
+bird
+siriactionsd
+MTLAssetUpgraderD
+networkserviceproxy
+Freeform
+chronod
+swcd
+duetexpertd
+linkd
+MENotificationAgent
+siriknowledged
+CoreLocationAgent
+Dock
+ControlCenter
+fontd
+SystemUIServer
+Finder
+callservicesd
+systemsoundserverd
+AppSSODaemon
+followupd
+awdd
+donotdisturbd
+filecoordinationd
+WallpaperAgent
+fontworker
+replicatord
+NotificationCenter
+com.apple.ColorSyncXPCAgent
+calaccessd
+sociallayerd
+suggestd
+familycircled
+StatusKitAgent
+iconservicesagent
+nearbyd
+heard
+idleassetsd
+wallpaperexportd
+intelligentroutingd
+audioaccessoryd
+extensionkitservice
+QuickLookUIService
+com.apple.quicklook.ThumbnailsAgent
+WallpaperVideoExtension
+findmylocateagent
+ViewBridgeAuxiliary
+akd
+sharedfilelistd
+axassetsd
+pbs
+assistant_cdmd
+automountd
+homed
+localizationswitcherd
+FamilyControlsAgent
+AMPDeviceDiscoveryAgent
+extensionkitservice
+sirittsd
+StocksWidget
+mobiletimerd
+appleaccountd
+replayd
+AudioComponentRegistrar
+CarbonComponentScannerXPC
+WeatherWidget
+UIKitSystem
+CalendarWidgetExtension
+cloudd
+imagent
+WorldClockWidget
+ScreenTimeWidgetExtension
+milod
+fmfd
+neagent
+com.apple.FaceTime.FTConversationService
+LoginUserService
+ContainerMetadataExtractor
+corespotlightd
+useractivityd
+mediaremoteagent
+bluetoothuserd
+IMDPersistenceAgent
+avconferenced
+com.apple.geod
+extensionkitservice
+CategoriesService
+com.apple.CloudDocs.iCloudDriveFileProvider
+ContextService
+QuickLookSatellite
+WiFiCloudAssetsXPCService
+iCloudNotificationAgent
+deleted_helper
+photolibraryd
+modelcatalogd
+ScopedBookmarkAgent
+com.apple.dock.extra
+HomeWidget
+com.apple.AmbientDisplayAgent
+PhotosReliveWidget
+UsageTrackingAgent
+com.apple.ColorSyncXPCAgent
+Spotlight
+FindMyWidgetItems
+VTDecoderXPCService
+mapssyncd
+HomeEnergyWidgetsExtension
+siriinferenced
+CallHistoryPluginHelper
+TipsWidgetExtension
+com.apple.hiservices-xpcservice
+RemindersWidgetExtension
+localspeechrecognition
+IOUserBluetoothSerialDriver
+IOUserBluetoothSerialDriver
+SafariWidgetExtension
+PlugInLibraryService
+storekitagent
+parsecd
+mediaanalysisd
+maild
+com.apple.Notes.WidgetExtension
+amsaccountsd
+itunescloudd
+amsengagementd
+ReportCrash
+ShortcutsWidgetExtension
+com.apple.CloudPhotosConfiguration
+Keychain Circle Notification
+ProtectedCloudKeySyncing
+CloudKeychainProxy
+FindMyWidgetPeople
+BatteriesAvocadoWidgetExtension
+AssetCacheLocatorService
+PeopleWidget_macOSExtension
+PodcastsWidget
+AssetCache
+CloudTelemetryService
+SafeEjectGPUAgent
+dataaccessd
+SafeEjectGPUService
+CloudTelemetryService
+photoanalysisd
+commerce
+imklaunchagent
+progressd
+EmojiFunctionRowIM_Extension
+osanalyticshelper
+diagnosticextensionsd
+financed
+coresymbolicationd
+keyboardservicesd
+spindump_agent
+installd
+system_installd
+diagnostics_agent
+appstoreagent
+AssetCacheTetheratorService
+storedownloadd
+geodMachServiceBridge
+installcoordinationd
+com.apple.AppStoreDaemon.StorePrivilegedODRService
+trustd
+CVMServer
+mdbulkimport
+StocksKitService
+gamecontrolleragentd
+findmydevice-user-agent
+spotlightknowledged
+cloudphotod
+SetStoreUpdateService
+com.microsoft.teams2.notificationcenter
+audiomxd
+corespeechd
+icdd
+askpermissiond
+com.microsoft.teams2.respawn
+AirPlayUIAgent
+TextInputMenuAgent
+ctkahp
+distnoted
+SafariLaunchAgent
+PlugInLibraryService
+CheatSheet
+ctkahp
+TextInputSwitcher
+localspeechrecognition
+SiriSuggestionsBookkeepingService
+com.apple.audio.ComponentTagHelper
+CrashReporterSupportHelper
+XProtectBridgeService
+peopled
+proactived
+SoftwareUpdateNotificationManager
+AppPredictionIntentsHelperService
+com.apple.audio.SandboxHelper
+triald_system
+lockdownmoded
+extensionkitservice
+CalendarIntentsExtension
+SafariLinkExtension
+MessagesActionExtension
+IntelligencePlatformComputeService
+localspeechrecognition
+SAExtensionOrchestrator
+extensionkitservice
+IFTelemetrySELFIngestor
+BiomeSELFIngestor
+GMSSELFIngestor
+IFTranscriptSELFIngestor
+seserviced
+SiriAUSP
+MauiAUSP
+MacinTalkAUSP
+KonaSynthesizer
+com.apple.audio.SandboxHelper
+com.apple.audio.SandboxHelper
+WardaSynthesizer_x86_64
+com.apple.audio.SandboxHelper
+com.apple.audio.SandboxHelper
+com.apple.audio.SandboxHelper
+com.apple.SiriTTSService.TrialProxy
+voicebankingd
+com.apple.SiriTTSService.TrialProxy
+trustd
+Microsoft Teams WebView
+msedge_crashpad_handler
+msedge_crashpad_handler
+Microsoft Teams WebView Helper (GPU)
+Microsoft Teams WebView Helper
+Microsoft Teams WebView Helper
+CursorUIViewService
+CMFSyncAgent
+contentlinkingd
+AppleSpell
+contactsd
+MTLCompilerService
+wifivelocityd
+trustd
+generativeexperiencesd
+promotedcontentd
+Microsoft Teams WebView Helper (Renderer)
+naturallanguaged
+MTLCompilerService
+MTLCompilerService
+com.apple.audio.SandboxHelper
+Microsoft Teams WebView Helper
+Microsoft Teams WebView Helper (Plugin)
+UserNotificationCenter
+VTEncoderXPCService
+com.apple.audio.SandboxHelper
+com.apple.audio.SandboxHelper
+audioanalyticsd
+devicecheckd
+keychainsharingmessagingd
+com.apple.DictionaryServiceHelper
+fudHelperAgent
+remotemanagementd
+SecuritySubscriber
+distnoted
+InteractiveLegacyProfilesSubscriber
+ScreenSharingSubscriber
+LegacyProfilesSubscriber
+PasscodeSettingsSubscriber
+DiskManagementSubscriber
+SoftwareUpdateSubscriber
+ManagementTestSubscriber
+ManagedConfigurationFilesSubscriber
+mdworker
+DockHelper
+installerdiagd
+AuthenticationServicesAgent
+CredentialProviderExtensionHelper
+homeenergyd
+mlhostd
+geoanalyticsd
+adprivacyd
+extensionkitservice
+feedbackd
+OfficeThumbnailExtension
+coreautha
+inputanalyticsd
+USBAgent
+AquaAppearanceHelper
+weatherd
+printtool
+tipsd
+Notion Helper (Renderer)
+Notion Helper (Renderer)
+managedcorespotlightd
+extensionkitservice
+PackageThumbnailExtension
+FontThumbnailExtension
+com.microsoft.teams2.teamsswitcher
+Google Chrome Helper (Renderer)
+AccessibilityVisualsAgent
+OSDUIHelper
+ControlCenterHelper
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+TextThumbnailExtension
+XProtect
+XProtect
+Electron
+chrome_crashpad_handler
+Code Helper (GPU)
+Code Helper
+Code Helper (Renderer)
+Code Helper (Renderer)
+Code Helper
+Code Helper
+Code Helper
+VTEncoderXPCService
+Code Helper (Plugin)
+Code Helper
+Code Helper (Plugin)
+Code Helper (Plugin)
+Code Helper (Plugin)
+Code Helper (Plugin)
+Code Helper (Plugin)
+Code Helper (Plugin)
+zsh
+XprotectService
+ReportCrash
+idea
+DiskUnmountWatcher
+fsnotifier
+Notion Helper (Renderer)
+Notion Helper (Renderer)
+com.apple.SiriTTSService.TrialProxy
+intelligenceplatformd
+ImageThumbnailExtension
+zsh
+Python
+Code Helper (Plugin)
+Code Helper (Plugin)
+Code Helper (Plugin)
+Code Helper (Plugin)
+MTLCompilerService
+zsh
+java
+zsh
+AudiovisualThumbnailExtension
+com.apple.audio.SandboxHelper
+PowerChime
+PasswordBreachAgent
+EscrowSecurityAlert
+SafariBookmarksSyncAgent
+liquiddetectiond
+ASPCarryLog
+fairplaydeviceidentityd
+XProtectUpdateService
+AssetCacheLocatorService
+mmaintenanced
+powerdatad
+swtransparencyd
+CloudTelemetryService
+spotlightknowledged
+privatecloudcomputed
+CloudTelemetryService
+com.apple.StreamingUnzipService.privileged
+nsattributedstringagent
+com.apple.hiservices-xpcservice
+cfprefsd
+com.apple.accessibility.mediaaccessibilityd
+nsattributedstringagent
+installerauthagent
+com.apple.accessibility.mediaaccessibilityd
+com.apple.MobileSoftwareUpdate.UpdateBrainService
+xpcroleaccountd
+EAUpdaterService
+betaenrollmentd
+fbahelperd
+businessservicesd
+MessagesBlastDoorService
+com.apple.appkit.xpc.openAndSavePanelService
+QuickLookUIService
+MTLCompilerService
+MTLCompilerService
+backgroundassets.user
+nbagent
+nbstated
+RemoteManagementAgent
+microstackshot
+proactiveeventtrackerd
+SafariConfigurationSubscriber
+SecuritySubscriber
+InteractiveLegacyProfilesSubscriber
+ScreenSharingSubscriber
+MathSettingsSubscriber
+LegacyProfilesSubscriber
+PasscodeSettingsSubscriber
+AccountSubscriber
+ManagementTestSubscriber
+ASConfigurationSubscriber
+sysdiagnosed
+media-indexer
+AMPLibraryAgent
+fairplayd
+PodcastContentService
+com.apple.BKAgentService
+AMPArtworkAgent
+ospredictiond
+modelmanagerd
+VTDecoderXPCService
+MTLCompilerService
+ciphermld
+cfprefsd
+griddatad
+cfprefsd
+cfprefsd
+cfprefsd
+dprivacyd
+cfprefsd
+cfprefsd
+metrickitd
+passd
+IMAutomaticHistoryDeletionAgent
+dprivacyd
+writeconfig
+iconservicesagent
+AuthBrokerAgent
+XprotectService
+mdwrite
+translationd
+com.apple.AppStoreDaemon.StorePrivilegedTaskService
+mdworker
+colorsync.useragent
+com.apple.ColorSyncXPCAgent
+com.apple.audio.SandboxHelper
+screencaptureui
+VTDecoderXPCService
+NowPlayingTouchUI
+bosreporter
+package_script_service
+MTLCompilerService
+MTLCompilerService
+LinkedNotesUIService
+MTLCompilerService
+ThemeWidgetControlViewService
+csnameddatad
+watchlistd
+csnameddatad
+distnoted
+VTDecoderXPCService
+warmd_agent
+warmd
+universalAccessAuthWarn
+CGPDFService
+Preview
+MTLCompilerService
+MTLCompilerService
+mscamerad-xpc
+ptpcamerad
+com.apple.appkit.xpc.openAndSavePanelService
+QuickLookUIService
+AutoFillPanelService
+SandboxedServiceRunner
+com.apple.Safari.History
+SafariNotificationAgent
+webprivacyd
+MTLCompilerService
+com.apple.Safari.SafeBrowsing.Service
+SpeechSynthesisServerXPC
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+com.apple.DriverKit.AppleUserECM
+com.apple.DriverKit.AppleUserECM
+GroupSessionService
+netbiosd
+Google Chrome Helper (Renderer)
+Google Chrome Helper
+Google Chrome Helper (Plugin)
+searchpartyuseragent
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+System Settings
+extensionkitservice
+GeneralSettings
+WebThumbnailExtension
+com.apple.WebKit.GPU
+com.apple.audio.SandboxHelper
+AppleIDSettings
+com.apple.HasTRB
+VPN
+HeadphoneSettingsExtension
+FamilySettings
+FollowUpSettingsExtension
+ClassroomSettings
+Bluetooth
+Network
+extensionkitservice
+VPN
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+MTLCompilerService
+Discord
+chrome_crashpad_handler
+Discord Helper (GPU)
+Discord Helper
+VTEncoderXPCService
+Discord Helper (Renderer)
+Discord Helper
+Discord Helper (Plugin)
+com.apple.SiriTTSService.TrialProxy
+com.apple.audio.SandboxHelper
+MTLCompilerService
+zsh
+Code Helper
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+mdworker_shared
+mdworker_shared
+mdworker_shared
+mdworker_shared
+CFNetworkAgent
+mdworker_shared
+Notion Helper
+Discord Helper
+Microsoft Teams WebView Helper
+Code Helper
+Google Chrome Helper
+node
+node
+ps
+ps
+(ps)
+CategoriesService
+ContextService
+PerfPowerServices
+STExtractionService.privileged
+mbuseragent
+GameControllerConfigService
+DataDetectorsSourceAccess
+appstorecomponentsd
+MTLCompilerService
+JapaneseIM-RomajiTyping
+Notion
+chrome_crashpad_handler
+Notion Helper (GPU)
+Notion Helper
+Notion Helper
+Notion Helper (Renderer)
+Notion Helper (Renderer)
+Notion Helper (Renderer)
+Notion Helper (Renderer)
+ShipIt
+mdsync
+MTLCompilerService
+VTDecoderXPCService
+Notion Helper (Renderer)
+Notion Helper (Renderer)
+DPSubmissionService
+distnoted
+cfprefsd
+MTLCompilerService
+Google Chrome
+chrome_crashpad_handler
+Google Chrome Helper (GPU)
+Google Chrome Helper
+Google Chrome Helper
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+com.apple.SiriTTSService.TrialProxy
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+Google Chrome Helper (Renderer)
+VTEncoderXPCService
+contactsdonationagent
+avatarsd
+MTLCompilerService
+VTDecoderXPCService
+com.apple.appkit.xpc.openAndSavePanelService
+QuickLookUIService
+Notion Helper (Renderer)
+Notion Helper (Renderer)
