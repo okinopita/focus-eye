@@ -44,10 +44,6 @@ pnpm install
 
 要約の出力は構造化（例: `summary`, `highlight`, `concentration_score`, `session_tags[]`）で保存することを想定しています。実際のスキーマは `AGENTS.md` を参照してください。
 
-## 貢献
-
-- Issue／Pull Request歓迎。ローカルでの検証やユニットテストを追加してください。
-
 ## ライセンス
 
 TBD
