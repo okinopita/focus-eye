@@ -1,2 +1,7 @@
+ignoredBuiltDependencies:
+  - electron
+  - esbuild
+  - ffi-napi
+
 onlyBuiltDependencies:
   - ref-napi

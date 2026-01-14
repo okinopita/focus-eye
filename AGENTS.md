@@ -48,6 +48,30 @@
   - これらは Electron のメインプロセス側で実装し、  
     Renderer とは **IPC 経由で通信**すること。
 
+**macOS Automation (AppleScript) — 推奨アクション**  
+
+- **権限**: AppleScript / Apple Events（Automation）で他アプリを操作するため、ホストアプリが対象アプリを制御する許可を求めるダイアログが表示されます。開発中はどの実行ホスト（Terminal / VS Code / ビルドしたアプリ）がダイアログを出すか確認してください。
+- **Info.plist**: 配布用の macOS アプリ（Electron バンドル等）では `NSAppleEventsUsageDescription` を Info.plist に追加し、ユーザー向けの説明文を記載してください。
+- **署名と公証**: 自動化機能を含む配布アプリはコード署名（Hardened Runtime が必要な場合あり）と Apple の notarization を推奨します。ハード化ランタイム／Apple Events 用エンタイトルメント（例: `com.apple.security.automation.apple-events`）が必要になることがあります。
+- **端末ごとの許可**: Automation の許可は端末・アプリ単位で付与されます。ある Mac で許可しても別の Mac へ自動的には引き継がれません。
+- **テスト手順（開発者向け）**:
+  - Terminal で直接 `osascript` を実行して動作確認する。例:
+    - `osascript -e 'tell application "Safari" to get name of current tab of front window'`
+    - `osascript -e 'tell application "Google Chrome" to get title of active tab of front window'`
+  - 実行ホスト（`ts-node` / `node` / Electron アプリ）ごとにダイアログの挙動を確認する。
+
+この項目を追加することで、AppleScript を使った最前面ウィンドウ／タブタイトル取得の実運用時に必要な手順が明確になります。
+
+**注記 — Accessibility は今回使用しない**
+
+- 本プロジェクトでは `AX`（Accessibility）API を今回は採用しません。Accessibility も同様に強い権限（System Settings → Privacy & Security → Accessibility）が必要でかつ実装コストが膨大になるため、現時点では導入しない方針です。
+
+**Enhance Mode（オプション）**
+
+- ブラウザのタブ情報を AppleScript/Automation 経由で取得する機能は今後の「Enhance Mode（拡張モード）」としてオプション扱いにします。デフォルトでは無効化し、開発者・ユーザーが明示的に有効化できるように設計してください。有効化時は上記の `NSAppleEventsUsageDescription` 追記、署名、notarize を強く推奨します。
+
+- 実装上の注意: ランタイムでの有効化フラグを用意し、UI または起動オプションで `Enable Automation` を切り替えられること。権限要求はホストアプリ単位で発生するため、`ts-node` / `node` / Electron のいずれがホストかでダイアログ挙動が異なります。
+
 ---
 
 ## 3. 必須機能（MVP スコープ）

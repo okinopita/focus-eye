@@ -1,5 +1,5 @@
 import { setTimeout } from 'timers/promises';
-import { systemUtils, setUseAutomation } from './getForegroundApp.ts';
+import { systemUtils, setUseAutomation } from './getForegroundApp.js';
 import { log } from 'console';
 
 const SESSION_TIME = 50 * 1000; // セッション時間のミリ秒
@@ -57,6 +57,8 @@ async function TaskSession(sessionTime: number,) {
         // console.log('windowTitle  :', fg.windowTitle);
         console.log(fg);
         
+      } else {
+        console.log('from getForegroundApp ->', fg);
       }
     } catch (e: any) {
       console.error('getForegroundApp error ->', e && e.message ? e.message : e);
