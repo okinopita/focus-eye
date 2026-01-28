@@ -1,4 +1,4 @@
-# Focus Share - アーキテクチャ解説
+# Focus eye - アーキテクチャ解説
 
 このドキュメントは、Electron アプリの構成と各ファイルの役割を詳細に説明します。
 
@@ -100,7 +100,7 @@ UI表示 (src/renderer/App.tsx)
 #### `src/native/getForegroundApp.ts`
 - **役割**: OS ネイティブ API へのアクセス
 - **macOS 実装**:
-  - `get_frontmost_app` バイナリを呼び出し（NSWorkspace.shared.frontmostApplication）
+  - `get_frontmost_app` バイナリを呼び出し（NSWorkspace.eyed.frontmostApplication）
   - オプション: AppleScript で ブラウザタブタイトルを取得（Automation）
 - **返り値**:
   ```typescript
@@ -122,7 +122,7 @@ UI表示 (src/renderer/App.tsx)
 
 #### `src/native/get_frontmost_app` (コンパイル済みバイナリ)
 - **役割**: macOS ネイティブ実行ファイル
-- **動作**: `NSWorkspace.shared.frontmostApplication` を呼び出し、アプリ情報を JSON で出力
+- **動作**: `NSWorkspace.eyed.frontmostApplication` を呼び出し、アプリ情報を JSON で出力
 - **再ビルド**:
   ```bash
   bash src/native/build_native.sh

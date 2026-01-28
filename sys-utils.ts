@@ -52,7 +52,7 @@ const platform = os.platform();
  */
 function macApi() {
   const foundation = ffi.Library("/System/Library/Frameworks/AppKit.framework/AppKit", {
-    // NSWorkspace.sharedWorkspace.frontmostApplication.localizedName を直接は呼びにくいので
+    // NSWorkspace.eyedWorkspace.frontmostApplication.localizedName を直接は呼びにくいので
     // 実際はネイティブブリッジ用の小さなObjective-Cプログラムをかませる必要あり。
     // ここではダミーで示す
   });

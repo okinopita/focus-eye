@@ -1,4 +1,4 @@
-# Focus Share – Electron Demo App
+# Focus eye – Electron Demo App
 
 Electron デスクトップアプリで セッション管理とアプリ使用割合の可視化を実装。
 
@@ -67,7 +67,7 @@ Electron なしでセッション機能を直接テストする：
 
 ```bash
 # src/native/main_session.ts を実行
-cd /Users/KK/work/ih13/SK32/focus-share
+cd /Users/KK/work/ih13/SK32/focus-eye
 npx ts-node src/native/main_session.ts
 
 # オプション: Automation 有効化

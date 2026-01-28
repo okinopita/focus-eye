@@ -2,6 +2,7 @@
  * App categorization utility based on app name and browsing content.
  */
 import type { AppCategory } from "./types.js";
+import type { AIClassificationOutput, AppWithRelevanceScore } from "../ai/types.js";
 
 export function categorizeApp(
   appDisplayName: string,
@@ -87,4 +88,33 @@ export function calculateUsageSummary(
   }
 
   return { appSummary, categorySummary };
+}
+
+/**
+ * Apply AI classification results to app logs
+ * Updates categories for apps that were classified as OTHER
+ */
+export function applyAIClassificationToLogs(
+  appLogs: Array<{ appDisplayName: string; timestamp: number; category: AppCategory }>,
+  aiResult: AIClassificationOutput | AppWithRelevanceScore[] // AppWithRelevanceScore[] or AIClassificationOutput
+): Array<{ appDisplayName: string; timestamp: number; category: AppCategory | string }> {
+  // Build a map of app name -> new category from AI result
+  const reclassificationMap = new Map<string, string>();
+  
+  // Handle both Array<AppWithRelevanceScore> and AIClassificationOutput
+  const apps = Array.isArray(aiResult) ? aiResult : aiResult.reclassified_apps;
+  for (const app of apps) {
+    reclassificationMap.set(app.app_name, app.new_category);
+  }
+
+  // Apply reclassification to logs that were OTHER
+  return appLogs.map((log) => {
+    if (log.category === "OTHER" && reclassificationMap.has(log.appDisplayName)) {
+      return {
+        ...log,
+        category: reclassificationMap.get(log.appDisplayName) || "OTHER",
+      };
+    }
+    return log;
+  });
 }

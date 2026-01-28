@@ -24,6 +24,8 @@ export interface SessionResult {
 export interface IpcSessionRequest {
   sessionTimeMs: number;
   enableAutomation?: boolean;
+  taskTitle?: string;
+  taskIntent?: string;
 }
 
 export interface IpcSessionResponse {

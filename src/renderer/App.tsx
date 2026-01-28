@@ -2,17 +2,19 @@
  * React App Component - Session UI
  */
 import React, { useState } from "react";
-import type { SessionResult } from "../common/types";
+import type { SessionResult, IpcSessionRequest } from "../common/types";
 
 declare global {
   interface Window {
     electronAPI?: {
-      startSession: (req: { sessionTimeMs: number; enableAutomation?: boolean }) => Promise<{ success: boolean; result?: SessionResult; error?: string }>;
+      startSession: (req: IpcSessionRequest) => Promise<{ success: boolean; result?: SessionResult; error?: string }>;
     };
   }
 }
 
 export default function App() {
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskIntent, setTaskIntent] = useState("");
   const [sessionSeconds, setSessionSeconds] = useState(50);
   const [enableAutomation, setEnableAutomation] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -36,6 +38,8 @@ export default function App() {
       const response = await window.electronAPI.startSession({
         sessionTimeMs: sessionSeconds * 1000,
         enableAutomation,
+        taskTitle: taskTitle || undefined,
+        taskIntent: taskIntent || undefined,
       });
 
       if (response.success && response.result) {
@@ -74,14 +78,42 @@ export default function App() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-200 mb-2">
+                Task Title (optional)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., Electron app implementation"
+                value={taskTitle}
+                onChange={(e) => setTaskTitle(e.target.value)}
+                disabled={isRunning}
+                className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white disabled:opacity-50 placeholder-slate-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-200 mb-2">
+                Task Intent (optional)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., Complete logging functionality"
+                value={taskIntent}
+                onChange={(e) => setTaskIntent(e.target.value)}
+                disabled={isRunning}
+                className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white disabled:opacity-50 placeholder-slate-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-200 mb-2">
                 Session Duration (seconds)
               </label>
               <input
                 type="number"
-                min="5"
-                max="3600"
+                min="1"
+                max="18000"
                 value={sessionSeconds}
-                onChange={(e) => setSessionSeconds(Math.max(5, parseInt(e.target.value) || 5))}
+                onChange={(e) => setSessionSeconds(Math.max(1, parseInt(e.target.value) || 1))}
                 disabled={isRunning}
                 className="w-full px-4 py-2 bg-slate-600 border border-slate-500 rounded text-white disabled:opacity-50"
               />
@@ -97,7 +129,7 @@ export default function App() {
                 className="w-4 h-4 rounded disabled:opacity-50"
               />
               <label htmlFor="automation" className="ml-2 text-sm text-slate-200">
-                Enable Automation (AppleScript - requires permission)
+                Enable Browser Tracking (AppleScript - requires automation permission)
               </label>
             </div>
 
