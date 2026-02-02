@@ -13,11 +13,11 @@ export function categorizeApp(
   const exec = appExecutable.toLowerCase();
   const browse = (browsing ?? "").toLowerCase();
 
-  // GAME: Steam, Epic Games, gaming apps
-  if (exec.includes("steam") || exec.includes("epic") || exec.includes("leagueoflegends") || exec.includes("valorant")) {
+  // GAME: gaming apps
+  if (exec.includes("leagueoflegends") || exec.includes("valorant")) {
     return "GAME";
   }
-  if (name.includes("steam") || name.includes("epic") || name.includes("game")) {
+  if (name.includes("epic") || name.includes("game")) {
     return "GAME";
   }
 
@@ -92,29 +92,138 @@ export function calculateUsageSummary(
 
 /**
  * Apply AI classification results to app logs
- * Updates categories for apps that were classified as OTHER
+ * Updates categories for apps that were classified as OTHER or BROWSER
  */
 export function applyAIClassificationToLogs(
-  appLogs: Array<{ appDisplayName: string; timestamp: number; category: AppCategory }>,
-  aiResult: AIClassificationOutput | AppWithRelevanceScore[] // AppWithRelevanceScore[] or AIClassificationOutput
-): Array<{ appDisplayName: string; timestamp: number; category: AppCategory | string }> {
-  // Build a map of app name -> new category from AI result
-  const reclassificationMap = new Map<string, string>();
+  appLogs: Array<{ appDisplayName: string; browsing?: string; timestamp: number; category: AppCategory; task_relevance_score?: number }>,
+  aiResult: AppWithRelevanceScore[]
+): Array<{ appDisplayName: string; browsing?: string; timestamp: number; category: AppCategory | string; task_relevance_score?: number }> {
+  // Build a map of app name -> { category, score } from AI result
+  const reclassificationMap = new Map<string, { category: string; score: number }>();
   
-  // Handle both Array<AppWithRelevanceScore> and AIClassificationOutput
-  const apps = Array.isArray(aiResult) ? aiResult : aiResult.reclassified_apps;
-  for (const app of apps) {
-    reclassificationMap.set(app.app_name, app.new_category);
+  for (const app of aiResult) {
+    reclassificationMap.set(app.app_name, {
+      category: app.new_category,
+      score: app.task_relevance_score,
+    });
   }
 
-  // Apply reclassification to logs that were OTHER
+  // Apply reclassification to logs that were OTHER or BROWSER
   return appLogs.map((log) => {
-    if (log.category === "OTHER" && reclassificationMap.has(log.appDisplayName)) {
-      return {
-        ...log,
-        category: reclassificationMap.get(log.appDisplayName) || "OTHER",
-      };
+    if ((log.category === "OTHER" || log.category === "BROWSER")) {
+      // For BROWSER category with browsing field, match by browsing title
+      const lookupKey = log.category === "BROWSER" && log.browsing 
+        ? log.browsing 
+        : log.appDisplayName;
+      
+      if (reclassificationMap.has(lookupKey)) {
+        const classification = reclassificationMap.get(lookupKey)!;
+        return {
+          ...log,
+          category: classification.category || "OTHER",
+          task_relevance_score: classification.score,
+        };
+      }
     }
     return log;
   });
+}
+
+/**
+ * Apply task relevance scores to all logs based on their category
+ * This should be called after AI classification to ensure all logs have scores
+ */
+export function applyTaskRelevanceScores<T extends { category: AppCategory | string; task_relevance_score?: number }>(
+  appLogs: T[]
+): Array<T & { task_relevance_score: number }> {
+  return appLogs.map((log) => ({
+    ...log,
+    task_relevance_score: log.task_relevance_score ?? getCategoryRelevanceScore(log.category),
+  }));
+}
+
+/**
+ * Get task relevance score for a category
+ */
+function getCategoryRelevanceScore(category: string): number {
+  switch (category) {
+    case "WORK":
+      return 1.0; // Directly task-related
+    case "COMMUNICATION":
+      return 0.5; // Neutral - may be work-related or personal
+    case "BROWSER":
+      return 0.5; // Neutral - depends on content
+    case "ENTERTAINMENT":
+      return 0.0; // Clearly not task-related
+    case "GAME":
+      return 0.0; // Clearly distraction
+    case "OTHER":
+      return -1.0; // Unknown - exclude from calculation
+    default:
+      return -1.0;
+  }
+}
+
+/**
+ * Calculate task relevance metrics for a session
+ * 
+ * @param appLogs - App logs with task_relevance_score
+ * @returns Aggregated task relevance metrics
+ */
+export function calculateTaskRelevanceMetrics(
+  appLogs: Array<{ timestamp: number; task_relevance_score?: number }>
+): {
+  taskRelevanceScore: number; // Overall score 0.0-1.0
+  taskRelevantTimeMs: number; // Time with score >= 0.5
+  taskIrrelevantTimeMs: number; // Time with score < 0.5
+  unknownTimeMs: number; // Time with score = -1.0 (excluded)
+} {
+  if (appLogs.length === 0) {
+    return {
+      taskRelevanceScore: 0,
+      taskRelevantTimeMs: 0,
+      taskIrrelevantTimeMs: 0,
+      unknownTimeMs: 0,
+    };
+  }
+
+  // Calculate time deltas between consecutive logs
+  const sortedLogs = [...appLogs].sort((a, b) => a.timestamp - b.timestamp);
+  
+  let taskRelevantTimeMs = 0;
+  let taskIrrelevantTimeMs = 0;
+  let unknownTimeMs = 0;
+  let totalScoredTimeMs = 0;
+  let weightedScoreSum = 0;
+
+  for (let i = 0; i < sortedLogs.length - 1; i++) {
+    const currentLog = sortedLogs[i];
+    const nextLog = sortedLogs[i + 1];
+    const deltaMs = nextLog.timestamp - currentLog.timestamp;
+    const score = currentLog.task_relevance_score ?? -1.0;
+
+    if (score === -1.0) {
+      // Unknown - exclude from calculation
+      unknownTimeMs += deltaMs;
+    } else if (score >= 0.5) {
+      // Task-relevant (WORK, COMMUNICATION)
+      taskRelevantTimeMs += deltaMs;
+      totalScoredTimeMs += deltaMs;
+      weightedScoreSum += score * deltaMs;
+    } else {
+      // Task-irrelevant (ENTERTAINMENT, GAME)
+      taskIrrelevantTimeMs += deltaMs;
+      totalScoredTimeMs += deltaMs;
+      weightedScoreSum += score * deltaMs;
+    }
+  }
+
+  const taskRelevanceScore = totalScoredTimeMs > 0 ? weightedScoreSum / totalScoredTimeMs : 0;
+
+  return {
+    taskRelevanceScore,
+    taskRelevantTimeMs,
+    taskIrrelevantTimeMs,
+    unknownTimeMs,
+  };
 }

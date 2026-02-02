@@ -69,7 +69,39 @@ function getAWSConfig(): AWSConfig | null {
  * Model: Amazon Nova 2 Lite (us.amazon.nova-2-lite-v1:0)
  *   - Inference Profile for on-demand access
  */
-function buildBedrockRequest(input: AIClassificationInput, systemPrompt: string): AWSBedrockRequest {
+function buildBedrockRequest(
+  input: AIClassificationInput,
+  systemPrompt: string,
+  taskTitle?: string,
+  useBrowserPrompt: boolean = false
+): AWSBedrockRequest {
+  let userInput: any;
+
+  if (useBrowserPrompt && input.other_apps) {
+    // Browser mode: expand window_titles_sample into individual executing entries
+    const apps: Array<{ executing: string }> = [];
+    
+    for (const app of input.other_apps) {
+      if (app.window_titles_sample && app.window_titles_sample.length > 0) {
+        // Add each browser title as a separate app
+        for (const title of app.window_titles_sample) {
+          apps.push({ executing: title });
+        }
+      } else {
+        // No browser titles, use app name
+        apps.push({ executing: app.app_name });
+      }
+    }
+
+    userInput = {
+      task_title: taskTitle || "タスク名未設定",
+      apps: apps,
+    };
+  } else {
+    // Standard mode: use original format
+    userInput = input;
+  }
+
   return {
     modelId: "us.amazon.nova-2-lite-v1:0", // Amazon Nova 2 Lite Inference Profile
     system: [
@@ -82,7 +114,7 @@ function buildBedrockRequest(input: AIClassificationInput, systemPrompt: string)
         role: "user",
         content: [
           {
-            text: JSON.stringify(input),
+            text: JSON.stringify(userInput),
           },
         ],
       },
@@ -160,7 +192,10 @@ export async function classifyOtherAppsWithAI(
 
   try {
     console.log(`[AI] Classifying ${otherApps.length} apps (browserMode=${useBrowserPrompt})...`);
-    const request = buildBedrockRequest({ other_apps: otherApps }, systemPrompt);
+    const request = buildBedrockRequest({ other_apps: otherApps }, systemPrompt, taskTitle, useBrowserPrompt);
+    
+    // Log AI input for debugging
+    console.log("[AI] Input to AI:", JSON.stringify(JSON.parse(request.messages[0].content[0].text), null, 2));
 
     // Make actual AWS Bedrock API call
     const response = await invokeBedrockModel(request, awsConfig);

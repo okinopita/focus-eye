@@ -86,33 +86,33 @@ function macApi() {
 
   async function getForegroundApp(): Promise<ForegroundInfo | string> {
     try {
-      console.log("[getForegroundApp] platform:", platform);
-      console.log("[getForegroundApp] __dirnamePath:", __dirnamePath);
+      // console.log("[getForegroundApp] platform:", platform);
+      // console.log("[getForegroundApp] __dirnamePath:", __dirnamePath);
       
       // Check both dist and src paths
       let bin = path.join(__dirnamePath, "get_frontmost_app");
-      console.log("[getForegroundApp] binary path (dist):", bin);
+      // console.log("[getForegroundApp] binary path (dist):", bin);
       
       if (!fs.existsSync(bin)) {
         // Fallback to src path when running from dist
         const srcPath = path.join(__dirnamePath, "..", "..", "src", "native", "get_frontmost_app");
-        console.log("[getForegroundApp] binary path (src fallback):", srcPath);
+        // console.log("[getForegroundApp] binary path (src fallback):", srcPath);
         if (fs.existsSync(srcPath)) {
           bin = srcPath;
         }
       }
       
-      console.log("[getForegroundApp] binary exists:", fs.existsSync(bin));
+      // console.log("[getForegroundApp] binary exists:", fs.existsSync(bin));
       
       if (!fs.existsSync(bin)) {
         const msg = "NotImplemented(macOS requires ObjC bridge — build sample_codes/build_native.sh)";
-        console.error("[getForegroundApp] ERROR:", msg);
+        // console.error("[getForegroundApp] ERROR:", msg);
         return msg;
       }
       
-      console.log("[getForegroundApp] executing binary...");
+      // console.log("[getForegroundApp] executing binary...");
       const out = execFileSync(bin, { encoding: "utf8" }).toString().trim();
-      console.log("[getForegroundApp] binary output:", out);
+      // console.log("[getForegroundApp] binary output:", out);
       
       if (!out) {
         console.warn("[getForegroundApp] empty output, returning default");
@@ -139,7 +139,7 @@ function macApi() {
         };
       } catch (e) {
         // fallback: tab-separated fallback format
-        console.log("[getForegroundApp] JSON parse failed, trying tab-separated format");
+        // console.log("[getForegroundApp] JSON parse failed, trying tab-separated format");
         const parts = out.split('\t');
         let browsing = "";
         if (useAutomation) {
