@@ -1,5 +1,5 @@
 /**
- * App categorization utility based on app name and browsing content.
+ * アプリ名とブラウジングコンテンツに基づいたアプリ分稽ユーティリティ。
  */
 import type { AppCategory } from "./types.js";
 import type { AIClassificationOutput, AppWithRelevanceScore } from "../ai/types.js";
@@ -13,7 +13,7 @@ export function categorizeApp(
   const exec = appExecutable.toLowerCase();
   const browse = (browsing ?? "").toLowerCase();
 
-  // GAME: gaming apps
+  // GAME: ゲームアプリ
   if (exec.includes("leagueoflegends") || exec.includes("valorant")) {
     return "GAME";
   }
@@ -21,7 +21,7 @@ export function categorizeApp(
     return "GAME";
   }
 
-  // WORK: IDEs, terminals, productivity
+  // WORK: IDE、ターミナル、生産性ツール
   if (exec.includes("code") || exec.includes("studio") || exec.includes("intellij") || exec.includes("android studio")) {
     return "WORK";
   }
@@ -32,17 +32,17 @@ export function categorizeApp(
     return "WORK";
   }
 
-  // BROWSER: Chrome, Safari, Edge, Firefox
+  // BROWSER: Chrome、Safari、Edge、Firefox
   if (name.includes("chrome") || name.includes("safari") || name.includes("edge") || name.includes("firefox")) {
     return "BROWSER";
   }
 
-  // COMMUNICATION: Slack, Discord, etc.
+  // COMMUNICATION: Slack、Discord など
   if (name.includes("slack") || name.includes("discord") || name.includes("teams") || name.includes("zoom")) {
     return "COMMUNICATION";
   }
 
-  // ENTERTAINMENT: YouTube, Netflix, Twitch in browsing content
+  // ENTERTAINMENT: ブラウジングコンテンツ内のYouTube、Netflix、Twitchなど
   if (browse.includes("youtube") || browse.includes("netflix") || browse.includes("twitch") || browse.includes("tiktok")) {
     return "ENTERTAINMENT";
   }
@@ -67,7 +67,7 @@ export function calculateUsageSummary(
     return { appSummary, categorySummary };
   }
 
-  // Sort by timestamp to calculate time between consecutive logs
+  // タイムスタンプでソートして連続したログ間の時間を計算
   const sorted = [...appLogs].sort((a, b) => a.timestamp - b.timestamp);
 
   for (let i = 0; i < sorted.length - 1; i++) {
@@ -79,10 +79,10 @@ export function calculateUsageSummary(
     categorySummary[curr.category] = (categorySummary[curr.category] ?? 0) + duration;
   }
 
-  // Add final log entry (use a default 5-second duration for the last entry)
+  // 最終ログエントリを追加（最後のエントリにはデフォルトの5秒間隔を使用）
   if (sorted.length > 0) {
     const last = sorted[sorted.length - 1];
-    const duration = 5000; // 5 seconds for the last log
+    const duration = 5000; // 最後のログには5秒
     appSummary[last.appDisplayName] = (appSummary[last.appDisplayName] ?? 0) + duration;
     categorySummary[last.category] = (categorySummary[last.category] ?? 0) + duration;
   }
@@ -91,14 +91,14 @@ export function calculateUsageSummary(
 }
 
 /**
- * Apply AI classification results to app logs
- * Updates categories for apps that were classified as OTHER or BROWSER
+ * AI分類結果をアプリログに適用
+ * OTHERまたはBROWSERに分類されたアプリのカテゴリを更新
  */
 export function applyAIClassificationToLogs(
   appLogs: Array<{ appDisplayName: string; browsing?: string; timestamp: number; category: AppCategory; task_relevance_score?: number }>,
   aiResult: AppWithRelevanceScore[]
 ): Array<{ appDisplayName: string; browsing?: string; timestamp: number; category: AppCategory | string; task_relevance_score?: number }> {
-  // Build a map of app name -> { category, score } from AI result
+  // AI結果からアプリ名 -> { category, score } のマップを作成
   const reclassificationMap = new Map<string, { category: string; score: number }>();
   
   for (const app of aiResult) {
@@ -108,10 +108,10 @@ export function applyAIClassificationToLogs(
     });
   }
 
-  // Apply reclassification to logs that were OTHER or BROWSER
+  // OTHER または BROWSER だったログに再分類を適用
   return appLogs.map((log) => {
     if ((log.category === "OTHER" || log.category === "BROWSER")) {
-      // For BROWSER category with browsing field, match by browsing title
+      // browsing フィールド付きBROWSERカテゴリの場合、ブラウジングタイトルで照合
       const lookupKey = log.category === "BROWSER" && log.browsing 
         ? log.browsing 
         : log.appDisplayName;
@@ -130,8 +130,8 @@ export function applyAIClassificationToLogs(
 }
 
 /**
- * Apply task relevance scores to all logs based on their category
- * This should be called after AI classification to ensure all logs have scores
+ * カテゴリに基づいて全ログにタスク関連スコアを適用
+ * AI分類後に呼び出して全ログにスコアが設定されるようにする
  */
 export function applyTaskRelevanceScores<T extends { category: AppCategory | string; task_relevance_score?: number }>(
   appLogs: T[]
@@ -143,40 +143,40 @@ export function applyTaskRelevanceScores<T extends { category: AppCategory | str
 }
 
 /**
- * Get task relevance score for a category
+ * カテゴリのタスク関連スコアを取得
  */
 function getCategoryRelevanceScore(category: string): number {
   switch (category) {
     case "WORK":
-      return 1.0; // Directly task-related
+      return 1.0; // 直接タスク関連
     case "COMMUNICATION":
-      return 0.5; // Neutral - may be work-related or personal
+      return 0.5; // 中立 - 仕事関連または個人的かもしれない
     case "BROWSER":
-      return 0.5; // Neutral - depends on content
+      return 0.5; // 中立 - コンテンツに依存
     case "ENTERTAINMENT":
-      return 0.0; // Clearly not task-related
+      return 0.0; // 明らかにタスク無関連
     case "GAME":
-      return 0.0; // Clearly distraction
+      return 0.0; // 明らかな気晴らし
     case "OTHER":
-      return -1.0; // Unknown - exclude from calculation
+      return -1.0; // 不明 - 計算から除外
     default:
       return -1.0;
   }
 }
 
 /**
- * Calculate task relevance metrics for a session
+ * セッションのタスク関連メトリクスを計算
  * 
- * @param appLogs - App logs with task_relevance_score
- * @returns Aggregated task relevance metrics
+ * @param appLogs - task_relevance_score 付きアプリログ
+ * @returns 集計されたタスク関連メトリクス
  */
 export function calculateTaskRelevanceMetrics(
   appLogs: Array<{ timestamp: number; task_relevance_score?: number }>
 ): {
-  taskRelevanceScore: number; // Overall score 0.0-1.0
-  taskRelevantTimeMs: number; // Time with score >= 0.5
-  taskIrrelevantTimeMs: number; // Time with score < 0.5
-  unknownTimeMs: number; // Time with score = -1.0 (excluded)
+  taskRelevanceScore: number; // 総合スコア 0.0-1.0
+  taskRelevantTimeMs: number; // スコア >= 0.5 の時間
+  taskIrrelevantTimeMs: number; // スコア < 0.5 の時間
+  unknownTimeMs: number; // スコア = -1.0 の時間（除外）
 } {
   if (appLogs.length === 0) {
     return {
@@ -187,7 +187,7 @@ export function calculateTaskRelevanceMetrics(
     };
   }
 
-  // Calculate time deltas between consecutive logs
+  // 連続したログ間の時間差を計算
   const sortedLogs = [...appLogs].sort((a, b) => a.timestamp - b.timestamp);
   
   let taskRelevantTimeMs = 0;
@@ -203,15 +203,15 @@ export function calculateTaskRelevanceMetrics(
     const score = currentLog.task_relevance_score ?? -1.0;
 
     if (score === -1.0) {
-      // Unknown - exclude from calculation
+      // 不明 - 計算から除外
       unknownTimeMs += deltaMs;
     } else if (score >= 0.5) {
-      // Task-relevant (WORK, COMMUNICATION)
+      // タスク関連（WORK、COMMUNICATION）
       taskRelevantTimeMs += deltaMs;
       totalScoredTimeMs += deltaMs;
       weightedScoreSum += score * deltaMs;
     } else {
-      // Task-irrelevant (ENTERTAINMENT, GAME)
+      // タスク無関連（ENTERTAINMENT、GAME）
       taskIrrelevantTimeMs += deltaMs;
       totalScoredTimeMs += deltaMs;
       weightedScoreSum += score * deltaMs;

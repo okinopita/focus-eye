@@ -1,5 +1,5 @@
 /**
- * Goals Statistics View Component
+ * ゴール統計表示コンポーネント
  */
 import React from "react";
 import type { Goal } from "../common/types";
@@ -12,7 +12,7 @@ interface GoalsStatsViewProps {
 export default function GoalsStatsView({ goals, onCreateGoal }: GoalsStatsViewProps) {
   const [goalProgress, setGoalProgress] = React.useState<Record<number, number>>({});
 
-  // Fetch actual session times for all goals
+  // 全ゴールの実際のセッション時間を取得
   React.useEffect(() => {
     const fetchProgress = async () => {
       const progressMap: Record<number, number> = {};
@@ -64,7 +64,7 @@ export default function GoalsStatsView({ goals, onCreateGoal }: GoalsStatsViewPr
     return Math.max(0, remaining);
   };
 
-  // Sort goals: active first, then by start_date descending
+  // ゴールをソート: 有効なものを最初に、その後 start_date の降順
   const sortedGoals = [...goals].sort((a, b) => {
     if (a.is_active !== b.is_active) {
       return a.is_active ? -1 : 1;
@@ -74,7 +74,7 @@ export default function GoalsStatsView({ goals, onCreateGoal }: GoalsStatsViewPr
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* ヘッダー */}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold text-white">ゴール統計</h2>
@@ -88,7 +88,7 @@ export default function GoalsStatsView({ goals, onCreateGoal }: GoalsStatsViewPr
         </button>
       </div>
 
-      {/* Goals List */}
+      {/* ゴールリスト */}
       {sortedGoals.length === 0 ? (
         <div className="bg-slate-700 rounded-lg p-12 text-center">
           <div className="text-slate-400 text-lg mb-4">まだGoalが作成されていません</div>
@@ -114,7 +114,7 @@ export default function GoalsStatsView({ goals, onCreateGoal }: GoalsStatsViewPr
                   !goal.is_active ? "opacity-60" : ""
                 }`}
               >
-                {/* Goal Header */}
+                {/* ゴールヘッダー */}
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-xl font-bold text-white mb-1">{goal.title}</h3>
@@ -141,7 +141,7 @@ export default function GoalsStatsView({ goals, onCreateGoal }: GoalsStatsViewPr
                   </div>
                 </div>
 
-                {/* Progress Bar */}
+                {/* プログレスバー */}
                 <div className="mb-4">
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-slate-300">進捗</span>
@@ -168,7 +168,7 @@ export default function GoalsStatsView({ goals, onCreateGoal }: GoalsStatsViewPr
                   </div>
                 </div>
 
-                {/* Stats Grid */}
+                {/* 統計情報グリッド */}
                 <div className="grid grid-cols-3 gap-4">
                   <div className="bg-slate-600 rounded p-3">
                     <div className="text-xs text-slate-400 mb-1">目標時間</div>

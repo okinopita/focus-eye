@@ -1,13 +1,17 @@
 /**
- * Preload script for Electron IPC communication
+ * Electron IPC通信用プリロードスクリプト
  */
 const { contextBridge, ipcRenderer } = require("electron");
 
-console.log("[Preload] Loading preload script");
+console.log("[プリロード] プリロードスクリプトをロード中");
 
 contextBridge.exposeInMainWorld("electronAPI", {
+  initDatabase: () =>
+    ipcRenderer.invoke("init:database"),
   startSession: (req: any) =>
     ipcRenderer.invoke("session:start", req),
+  stopSession: () =>
+    ipcRenderer.invoke("session:stop"),
   getActiveGoals: () =>
     ipcRenderer.invoke("goals:getActive"),
   getAllGoals: () =>
@@ -20,4 +24,4 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.invoke("shell:openExternal", url),
 });
 
-console.log("[Preload] electronAPI exposed to window");
+console.log("[プリロード] electronAPI をウィンドウに公開");

@@ -1,11 +1,11 @@
 /**
- * Database Repositories (SQL.js)
+ * データベースリポジトリ (SQL.js)
  */
 import type { Database as SqlJsDatabase, SqlValue } from "sql.js";
 import { getDatabase, saveDatabaseToFile } from "./database.js";
 
 // ============================================================
-// Types
+// 型定義
 // ============================================================
 
 export interface Goal {
@@ -70,7 +70,7 @@ export interface NewSession {
 }
 
 // ============================================================
-// Session Repository
+// セッションリポジトリ
 // ============================================================
 
 export class SessionRepository {
@@ -81,7 +81,7 @@ export class SessionRepository {
   }
 
   /**
-   * Create a new session
+   * 新しいセッションを作成
    */
   create(session: NewSession): Session {
     const now = Date.now();
@@ -94,7 +94,7 @@ export class SessionRepository {
       duration_ms: session.duration_ms,
     });
     
-    // Execute INSERT
+    // INSERT を実行
     this.db.exec(
       `INSERT INTO sessions (
         goal_id, task_title, task_intent, start_time, end_time, duration_ms,
@@ -125,16 +125,16 @@ export class SessionRepository {
       ]
     );
 
-    // Get ID immediately (before saving file) - use sqlite_sequence
+    // IDをすぐに取得（ファイル保存前）- sqlite_sequence を使用
     const seqResult = this.db.exec(`SELECT seq FROM sqlite_sequence WHERE name = 'sessions'`);
-    console.log("[SessionRepository] sqlite_sequence result:", JSON.stringify(seqResult, null, 2));
+    console.log("[SessionRepository] sqlite_sequence 結果:", JSON.stringify(seqResult, null, 2));
     
     if (seqResult.length === 0 || seqResult[0].values.length === 0) {
       throw new Error("Failed to get inserted session ID from sqlite_sequence");
     }
     
     const insertedId = seqResult[0].values[0][0] as number;
-    console.log("[SessionRepository] Inserted session ID:", insertedId);
+    console.log("[SessionRepository] 挿入されたセッション ID:", insertedId);
     
     saveDatabaseToFile();
     
@@ -142,7 +142,7 @@ export class SessionRepository {
       throw new Error("INSERT failed - last_insert_rowid returned 0");
     }
     
-    // Fetch the created session using exec()
+    // exec() を使用して作成されたセッションを取得
     const result = this.db.exec(`SELECT * FROM sessions WHERE id = ?`, [insertedId]);
     
     if (result.length === 0 || result[0].values.length === 0) {
@@ -154,7 +154,7 @@ export class SessionRepository {
   }
 
   /**
-   * Get session by ID
+   * セッション ID で取得
    */
   findById(id: number): Session | null {
     const result = this.db.exec(`SELECT * FROM sessions WHERE id = ?`, [id]);
@@ -163,9 +163,9 @@ export class SessionRepository {
   }
 
   /**
-   * Get sessions by date range
-   * @param startDate - Unix timestamp (ms)
-   * @param endDate - Unix timestamp (ms)
+   * 日付範囲でセッションを取得
+   * @param startDate - Unix タイムスタンプ (ms)
+   * @param endDate - Unix タイムスタンプ (ms)
    */
   findByDateRange(startDate: number, endDate: number, includeDemo: boolean = false): Session[] {
     const sql = includeDemo
@@ -178,12 +178,12 @@ export class SessionRepository {
   }
 
   /**
-   * Get sessions for current week
+   * 今週のセッションを取得
    */
   findThisWeek(includeDemo: boolean = false): Session[] {
     const now = new Date();
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
+    startOfWeek.setDate(now.getDate() - now.getDay()); // 日曜日
     startOfWeek.setHours(0, 0, 0, 0);
 
     const endOfWeek = new Date(startOfWeek);
@@ -193,9 +193,9 @@ export class SessionRepository {
   }
 
   /**
-   * Get total session time for a specific goal
-   * @param goalId - Goal ID to aggregate sessions for
-   * @returns Total time in milliseconds
+   * 特定のゴールの総セッション時間を取得
+   * @param goalId - 集計対象のゴール ID
+   * @returns ミリ秒単位の総時間
    */
   getTotalTimeByGoal(goalId: number): number {
     const result = this.db.exec(
@@ -212,7 +212,7 @@ export class SessionRepository {
   }
 
   /**
-   * Get all sessions (for demo purposes)
+   * 全セッションを取得（デモ用）
    */
   findAll(limit: number = 100): Session[] {
     const result = this.db.exec(`SELECT * FROM sessions ORDER BY start_time DESC LIMIT ?`, [limit]);
@@ -221,7 +221,7 @@ export class SessionRepository {
   }
 
   /**
-   * Count sessions this week
+   * 今週のセッション数をカウント
    */
   countThisWeek(includeDemo: boolean = false): number {
     const sessions = this.findThisWeek(includeDemo);
@@ -229,7 +229,7 @@ export class SessionRepository {
   }
 
   /**
-   * Helper: Map SQL row to Session object
+   * ヘルパー: SQL 事列を Session オブジェクトにマップ
    */
   private mapRowToSession(row: SqlValue[]): Session {
     return {
@@ -257,7 +257,7 @@ export class SessionRepository {
 }
 
 // ============================================================
-// Goal Repository
+// ゴールリポジトリ
 // ============================================================
 
 export class GoalRepository {
@@ -268,7 +268,7 @@ export class GoalRepository {
   }
 
   /**
-   * Create a new goal
+   * 新しいゴールを作成
    */
   create(goal: NewGoal): Goal {
     const now = Date.now();
@@ -283,46 +283,46 @@ export class GoalRepository {
       created_at: now,
     });
 
-    // Execute INSERT statement
+    // INSERT ステートメントを実行
     this.db.exec(
       `INSERT INTO goals (title, target_time_ms, start_date, end_date, is_active, created_at)
        VALUES (?, ?, ?, ?, ?, ?)`,
       [goal.title, goal.target_time_ms, goal.start_date, goal.end_date, isActive, now]
     );
 
-    console.log("[GoalRepository.create] INSERT executed");
+    console.log("[GoalRepository.create] INSERT 実行完了");
 
-    // Get the last inserted ID
+    // 最後に挿入されたIDを取得
     const seqResult = this.db.exec(`SELECT seq FROM sqlite_sequence WHERE name = 'goals'`);
-    console.log("[GoalRepository.create] sqlite_sequence result:", JSON.stringify(seqResult));
+    console.log("[GoalRepository.create] sqlite_sequence 結果:", JSON.stringify(seqResult));
 
     if (seqResult.length === 0 || seqResult[0].values.length === 0) {
       throw new Error("Failed to get inserted goal ID from sqlite_sequence");
     }
 
     const insertedId = seqResult[0].values[0][0] as number;
-    console.log("[GoalRepository.create] Inserted ID:", insertedId);
+    console.log("[GoalRepository.create] 挿入された ID:", insertedId);
 
-    // Save database to file IMMEDIATELY after INSERT
-    console.log("[GoalRepository.create] Calling saveDatabaseToFile...");
+    // INSERT 直後にデータベースをファイルに保存
+    console.log("[GoalRepository.create] saveDatabaseToFile を呼び出し中...");
     saveDatabaseToFile();
-    console.log("[GoalRepository.create] Database saved to file");
+    console.log("[GoalRepository.create] データベースをファイルに保存完了");
 
-    // Verify the insert by fetching the record
+    // レコードを取得して挿入を検証
     const result = this.db.exec(`SELECT * FROM goals WHERE id = ?`, [insertedId]);
-    console.log("[GoalRepository.create] Verification SELECT result:", JSON.stringify(result));
+    console.log("[GoalRepository.create] 検証 SELECT 結果:", JSON.stringify(result));
 
     if (result.length === 0 || result[0].values.length === 0) {
       throw new Error(`Failed to fetch created goal with ID ${insertedId}`);
     }
 
     const mappedGoal = this.mapRowToGoal(result[0].values[0] as SqlValue[]);
-    console.log("[GoalRepository.create] Returning mapped goal:", mappedGoal);
+    console.log("[GoalRepository.create] マップされたゴールを返却:", mappedGoal);
     return mappedGoal;
   }
 
   /**
-   * Get goal by ID
+   * ゴール ID で取得
    */
   findById(id: number): Goal | null {
     const result = this.db.exec(`SELECT * FROM goals WHERE id = ?`, [id]);
@@ -331,7 +331,7 @@ export class GoalRepository {
   }
 
   /**
-   * Get all active goals
+   * 有効な全ゴールを取得
    */
   findActive(): Goal[] {
     const result = this.db.exec(`SELECT * FROM goals WHERE is_active = 1 ORDER BY start_date DESC`);
@@ -340,7 +340,7 @@ export class GoalRepository {
   }
 
   /**
-   * Get all goals (including inactive)
+   * 全ゴールを取得（無効なものを含む）
    */
   findAll(): Goal[] {
     const result = this.db.exec(`SELECT * FROM goals ORDER BY start_date DESC`);
@@ -349,7 +349,7 @@ export class GoalRepository {
   }
 
   /**
-   * Get goals by date range
+   * 日付範囲でゴールを取得
    */
   findByDateRange(startDate: number, endDate: number): Goal[] {
     const result = this.db.exec(
@@ -361,7 +361,7 @@ export class GoalRepository {
   }
 
   /**
-   * Update goal
+   * ゴールを更新
    */
   update(id: number, updates: Partial<Omit<Goal, 'id' | 'created_at'>>): Goal | null {
     const goal = this.findById(id);
@@ -390,7 +390,7 @@ export class GoalRepository {
   }
 
   /**
-   * Helper: Map SQL row to Goal object
+   * ヘルパー: SQL 事列を Goal オブジェクトにマップ
    */
   private mapRowToGoal(row: SqlValue[]): Goal {
     return {
@@ -406,7 +406,7 @@ export class GoalRepository {
 }
 
 // ============================================================
-// Settings Repository
+// 設定リポジトリ
 // ============================================================
 
 export class SettingsRepository {
@@ -417,7 +417,7 @@ export class SettingsRepository {
   }
 
   /**
-   * Get setting value
+   * 設定値を取得
    */
   get(key: string): string | null {
     const result = this.db.exec(`SELECT value FROM settings WHERE key = ?`, [key]);
@@ -426,7 +426,7 @@ export class SettingsRepository {
   }
 
   /**
-   * Set setting value
+   * 設定値を設定
    */
   set(key: string, value: string): void {
     const now = Date.now();
@@ -442,7 +442,7 @@ export class SettingsRepository {
   }
 
   /**
-   * Get weekly session goal
+   * 週間セッションゴールを取得
    */
   getWeeklyGoal(): number {
     const value = this.get("weekly_session_goal");
@@ -450,7 +450,7 @@ export class SettingsRepository {
   }
 
   /**
-   * Set weekly session goal
+   * 週間セッションゴールを設定
    */
   setWeeklyGoal(goal: number): void {
     this.set("weekly_session_goal", goal.toString());

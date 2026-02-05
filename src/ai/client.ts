@@ -1,7 +1,7 @@
 /**
- * AWS Bedrock AI Evaluation Client
+ * AWS Bedrock AI 評価クライアント
  * 
- * Sends OTHER app classification to AWS Claude model for reclassification
+ * OTHER アプリ分類を AWS Claude モデルに送信して再分類
  */
 
 import type { AIClassificationInput, AIClassificationOutput, AWSBedrockRequest, AppWithRelevanceScore } from "./types";
@@ -16,17 +16,17 @@ let SYSTEM_PROMPT = "";
 let SYSTEM_PROMPT_BROWSER = "";
 
 function loadSystemPrompt(isBrowserMode: boolean = false): string {
-  // At runtime, load from dist/ai/system_prompt.md or system_prompt-browser.md
-  // For development, read from src/ai/system_prompt.md
+  // 実行時に dist/ai/system_prompt.md または system_prompt-browser.md からロード
+  // 開発時には src/ai/system_prompt.md から読み込み
   const promptFile = isBrowserMode ? "system_prompt-browser.md" : "system_prompt.md";
   
   try {
-    // Try dist first (production)
+    // 最初に dist を試す（本番環境）
     const distPath = path.join(__dirname, promptFile);
     if (fs.existsSync(distPath)) {
       return fs.readFileSync(distPath, "utf8");
     }
-    // Fallback to src (development)
+    // src にフォールバック（開発環境）
     const srcPath = path.join(__dirname, "..", "..", "src", "ai", promptFile);
     if (fs.existsSync(srcPath)) {
       return fs.readFileSync(srcPath, "utf8");
@@ -37,7 +37,7 @@ function loadSystemPrompt(isBrowserMode: boolean = false): string {
   return "";
 }
 
-// Load both prompts on startup
+// 起動時に両方のプロンプトをロード
 SYSTEM_PROMPT = loadSystemPrompt(false);
 SYSTEM_PROMPT_BROWSER = loadSystemPrompt(true);
 
@@ -48,7 +48,7 @@ interface AWSConfig {
 }
 
 /**
- * Get AWS credentials from environment variables
+ * 環境変数から AWS 認証情報を取得
  */
 function getAWSConfig(): AWSConfig | null {
   const region = process.env.AWS_REGION;
@@ -64,10 +64,10 @@ function getAWSConfig(): AWSConfig | null {
 }
 
 /**
- * Build request object for AWS Bedrock model
+ * AWS Bedrock モデル用リクエストオブジェクトを構築
  * 
- * Model: Amazon Nova 2 Lite (us.amazon.nova-2-lite-v1:0)
- *   - Inference Profile for on-demand access
+ * モデル: Amazon Nova 2 Lite (us.amazon.nova-2-lite-v1:0)
+ *   - オンデマンドアクセス用推論プロフィール
  */
 function buildBedrockRequest(
   input: AIClassificationInput,
@@ -78,17 +78,17 @@ function buildBedrockRequest(
   let userInput: any;
 
   if (useBrowserPrompt && input.other_apps) {
-    // Browser mode: expand window_titles_sample into individual executing entries
+    // ブラウザモード: window_titles_sample を個別の実行エントリに展開
     const apps: Array<{ executing: string }> = [];
     
     for (const app of input.other_apps) {
       if (app.window_titles_sample && app.window_titles_sample.length > 0) {
-        // Add each browser title as a separate app
+        // 各ブラウザタイトルを個別のアプリとして追加
         for (const title of app.window_titles_sample) {
           apps.push({ executing: title });
         }
       } else {
-        // No browser titles, use app name
+        // ブラウザタイトルなし、アプリ名を使用
         apps.push({ executing: app.app_name });
       }
     }
@@ -98,12 +98,12 @@ function buildBedrockRequest(
       apps: apps,
     };
   } else {
-    // Standard mode: use original format
+    // 標準モード: 元の形式を使用
     userInput = input;
   }
 
   return {
-    modelId: "us.amazon.nova-2-lite-v1:0", // Amazon Nova 2 Lite Inference Profile
+    modelId: "us.amazon.nova-2-lite-v1:0", // Amazon Nova 2 Lite 推論プロファイル
     system: [
       {
         text: systemPrompt,
@@ -127,12 +127,12 @@ function buildBedrockRequest(
 }
 
 /**
- * Parse AI response and validate against expected schema
- * Handles both raw JSON and markdown-wrapped JSON
+ * AIレスポンスをパースし、期待されるスキーマに対して検証する
+ * 生のJSONおよびマークダウンでラップされたJSONの両方を処理
  */
 function parseAIResponse(responseText: string): AIClassificationOutput | null {
   try {
-    // Remove markdown code block wrapper if present
+    // マークダウンコードブロックラッパーが存在する場合は削除
     let jsonText = responseText.trim();
     if (jsonText.startsWith("```json")) {
       jsonText = jsonText.replace(/^```json\n?/, "").replace(/\n?```$/, "");
@@ -140,11 +140,11 @@ function parseAIResponse(responseText: string): AIClassificationOutput | null {
       jsonText = jsonText.replace(/^```\n?/, "").replace(/\n?```$/, "");
     }
 
-    console.log("[AI] Extracting JSON from response:", jsonText.substring(0, 100));
+    console.log("[AI] レスポンスから JSON を抽出:", jsonText.substring(0, 100));
 
     const parsed = JSON.parse(jsonText);
 
-    // Validate reclassified_apps
+    // reclassified_apps を検証
     if (!Array.isArray(parsed.reclassified_apps)) {
       console.error("[AI] Missing reclassified_apps array");
       return null;
@@ -165,19 +165,19 @@ function parseAIResponse(responseText: string): AIClassificationOutput | null {
 }
 
 /**
- * Classify OTHER / BROWSER apps using AWS Bedrock model
+ * OTHER / BROWSER アプリを AWS Bedrock モデルで分類
  * 
- * @param otherApps - Array of apps classified as OTHER or BROWSER
- * @param taskTitle - Task title for context-aware classification
- * @param useBrowserPrompt - Whether to use browser-aware classification prompt
- * @returns Classification result with task relevance scores
+ * @param otherApps - OTHER または BROWSER と分類されたアプリの配列
+ * @param taskTitle - コンテキスト認識分類のためのタスクタイトル
+ * @param useBrowserPrompt - ブラウザ対応分類プロンプトを使用するかどうか
+ * @returns タスク関連スコア付きの分類結果
  */
 export async function classifyOtherAppsWithAI(
   otherApps: Array<{ app_name: string; seconds: number; window_titles_sample: string[] }>,
   taskTitle?: string,
   useBrowserPrompt: boolean = false
 ): Promise<Array<AppWithRelevanceScore> | null> {
-  // If no OTHER/BROWSER apps, return empty result
+  // OTHER/BROWSER アプリがない場合は空結果を返す
   if (otherApps.length === 0) {
     return [];
   }
@@ -191,27 +191,27 @@ export async function classifyOtherAppsWithAI(
   }
 
   try {
-    console.log(`[AI] Classifying ${otherApps.length} apps (browserMode=${useBrowserPrompt})...`);
+    console.log(`[AI] ${otherApps.length} 件のアプリを分類中 (browserMode=${useBrowserPrompt})...`);
     const request = buildBedrockRequest({ other_apps: otherApps }, systemPrompt, taskTitle, useBrowserPrompt);
     
-    // Log AI input for debugging
-    console.log("[AI] Input to AI:", JSON.stringify(JSON.parse(request.messages[0].content[0].text), null, 2));
+    // デバッグ用にAI入力をログ出力
+    console.log("[AI] AI への入力:", JSON.stringify(JSON.parse(request.messages[0].content[0].text), null, 2));
 
-    // Make actual AWS Bedrock API call
+    // 実際のAWS Bedrock APIコールを実行
     const response = await invokeBedrockModel(request, awsConfig);
     if (!response) {
       console.error("[AI] Failed to get response from Bedrock");
       return getMockClassification(otherApps);
     }
 
-    // Extract text from response and parse (Amazon Nova format)
+    // レスポンスからテキストを抽出してパース（Amazon Nova 形式）
     let responseText = "";
     if (response.output?.message?.content && Array.isArray(response.output.message.content)) {
       responseText = response.output.message.content
         .map((c: any) => c.text)
         .join("");
     } else if (response.content && Array.isArray(response.content)) {
-      // Fallback for Claude format
+      // Claude 形式用フォールバック
       responseText = response.content
         .filter((c: any) => c.type === "text")
         .map((c: any) => c.text)
@@ -225,7 +225,7 @@ export async function classifyOtherAppsWithAI(
 
     const parsed = parseAIResponse(responseText);
     if (parsed) {
-      console.log("[AI] Successfully classified apps");
+      console.log("[AI] アプリ分類成功");
       return addRelevanceScores(parsed.reclassified_apps, taskTitle);
     } else {
       console.error("[AI] Failed to parse Bedrock response");
@@ -245,14 +245,14 @@ function getMockClassification(
   otherApps: Array<{ app_name: string; seconds: number; window_titles_sample: string[] }>,
   taskTitle?: string
 ): Array<AppWithRelevanceScore> {
-  console.log("[AI] Using MOCK classification (AWS credentials not available)");
+  console.log("[AI] MOCK 分類を使用 (AWS 認証情報が利用不可)");
   const reclassified_apps = otherApps.map((app) => {
     const name = app.app_name.toLowerCase();
     const titles = (app.window_titles_sample || []).join(" ").toLowerCase();
 
-    console.log(`[AI Mock] Evaluating: "${app.app_name}" | titles: ${titles || "(empty)"}`);
+    console.log(`[AI Mock] 評価中: "${app.app_name}" | タイトル: ${titles || "(空)"}`);
 
-    // Simple keyword matching
+    // 単純なキーワードマッチング
     if (name.includes("code") || name.includes("studio") || name.includes("xcode")) {
       return { app_name: app.app_name, new_category: "WORK" };
     }
@@ -269,11 +269,11 @@ function getMockClassification(
       return { app_name: app.app_name, new_category: "COMMUNICATION" };
     }
     if (name.includes("epic") || name.includes("game")) {
-      console.log(`[AI Mock] "${app.app_name}" matched GAME keyword`);
+      console.log(`[AI Mock] "${app.app_name}" が GAME キーワードにマッチ`);
       return { app_name: app.app_name, new_category: "GAME" };
     }
 
-    console.log(`[AI Mock] "${app.app_name}" -> OTHER (no match)`);
+    console.log(`[AI Mock] "${app.app_name}" -> OTHER (マッチなし)`);
     return { app_name: app.app_name, new_category: "OTHER" };
   });
 
@@ -307,15 +307,15 @@ function addRelevanceScores(
 function getRelevanceScoreForCategory(category: string): number {
   switch (category) {
     case "WORK":
-      return 1.0; // Directly task-related
+      return 1.0; // 直接タスク関連
     case "COMMUNICATION":
-      return 0.5; // Neutral - may be work-related or personal
+      return 0.5; // 中立 - 仕事関連または個人的かもしれない
     case "ENTERTAINMENT":
-      return 0.0; // Clearly not task-related
+      return 0.0; // 明らかにタスク無関連
     case "GAME":
-      return 0.0; // Clearly distraction
+      return 0.0; // 明らかな気晴らし
     case "OTHER":
-      return -1.0; // Unknown - exclude from calculation
+      return -1.0; // 不明 - 計算から除外
     default:
       return -1.0;
   }
@@ -329,7 +329,7 @@ async function invokeBedrockModel(
   awsConfig: { region: string; accessKeyId: string; secretAccessKey: string }
 ): Promise<any> {
   try {
-    // Dynamic import to avoid hard dependency
+    // ハード依存を避けるための動的インポート
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const awsSDK = await import("@aws-sdk/client-bedrock-runtime" as any);
     const BedrockRuntimeClient = awsSDK.BedrockRuntimeClient;
@@ -352,9 +352,9 @@ async function invokeBedrockModel(
     const response = await client.send(command);
     const responseBody = JSON.parse(new TextDecoder().decode(response.body));
 
-    console.log("[AI] Bedrock raw response:", JSON.stringify(responseBody, null, 2));
+    console.log("[AI] Bedrock 生レスポンス:", JSON.stringify(responseBody, null, 2));
 
-    // Return the full responseBody to preserve Nova's structure
+    // Nova の構造を保持するために完全な responseBody を返す
     return responseBody;
   } catch (e: any) {
     if (e.message?.includes("Cannot find module") || e.message?.includes("ERR_MODULE_NOT_FOUND")) {

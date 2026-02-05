@@ -1,9 +1,9 @@
 /**
- * AI Evaluation API types
+ * API タイプ定義
  */
 
 /**
- * Input: OTHER カテゴリのアプリのみを AI に送信
+ * 入力: OTHER カテゴリのアプリのみを AI に送信
  */
 export interface AIClassificationInput {
   other_apps: Array<{
@@ -22,7 +22,7 @@ export interface ReclassifiedApp {
 }
 
 /**
- * Output: OTHER / BROWSER アプリの分類結果
+ * 出力: OTHER / BROWSER アプリの分類結果
  */
 export interface AIClassificationOutput {
   reclassified_apps: Array<ReclassifiedApp>;
@@ -36,7 +36,7 @@ export interface AppWithRelevanceScore extends ReclassifiedApp {
 }
 
 /**
- * Legacy: 古い型（互換性のため保持）
+ * 【レガシー】: 古い型（互換性保護のため保持）
  */
 export interface AISessionInput {
   task: string; // タスク宣言（ユーザーが入力した作業内容）
@@ -75,10 +75,10 @@ export interface AISessionOutput {
   session_feedback: AISessionFeedback;
   
   /**
-   * Internal field: NOT displayed to users
-   * Used internally for message generation and analysis
-   * Score 0.0-1.0 indicating productive vs distraction time ratio
-   * (Higher = more work time relative to total)
+   * 内部フィールド: ユーザーには表示されない
+   * メッセージ生成と分析に内部的に使用
+   * スコア 0.0-1.0 で生産的時間 vs 気晴らし時間の比率を示す
+   * (高い = 総時間に対して作業時間が多い)
    */
   focus_score?: number;
 }

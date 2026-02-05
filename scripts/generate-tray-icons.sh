@@ -1,14 +1,14 @@
 #!/bin/bash
-# Generate tray icons from emoji
+# 絵文字からトレイアイコンを生成
 
 ASSETS_DIR="./assets/tray"
 mkdir -p "$ASSETS_DIR"
 
-# Method 1: Using SF Symbols (macOS built-in)
-# eyes.fill is closest to 👀
-echo "Generating tray icons..."
+# 方法 1: SF Symbols を使用 (macOS組み込み)
+# eyes.fill が最も近い
+echo "トレイアイコンを生成中..."
 
-# For now, create placeholder text files - you'll need to replace with actual images
+# 只今はプレースホルダーテキストファイルを作成 - 実際の画像は手動で置き換えてください
 cat > "$ASSETS_DIR/README.md" << 'EOF'
 # Tray Icon Assets
 

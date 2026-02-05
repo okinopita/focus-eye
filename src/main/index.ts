@@ -1,19 +1,20 @@
 /**
- * Electron Main Process
- * Handles IPC communication for session management and app logging.
+ * Electron メインプロセス
+ * セッション管理とアプリケーションロギング用の IPC 通信を処理
  */
-import { app, BrowserWindow, ipcMain, shell, Tray, nativeImage, Notification } from "electron";
+import { app, BrowserWindow, ipcMain, shell, Tray, nativeImage } from "electron";
 import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs";
+import { execSync } from "child_process";
 import { systemUtils, setUseAutomation } from "../native/getForegroundApp.js";
 import { categorizeApp, calculateUsageSummary, applyAIClassificationToLogs, applyTaskRelevanceScores, calculateTaskRelevanceMetrics } from "../common/analytics.js";
 import { classifyOtherAppsWithAI } from "../ai/client.js";
-import { initializeDatabase, closeDatabase } from "../db/database.js";
+import { initializeDatabase, closeDatabase, getDatabase } from "../db/database.js";
 import { SessionRepository, SettingsRepository, GoalRepository } from "../db/repositories.js";
 import type { IpcSessionRequest, IpcSessionResponse, AppLog, SessionResult } from "../common/types.js";
 
-// Load .env file for AWS credentials
+// AWS認証情報のため .env ファイルをロード
 function loadEnv() {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
@@ -30,7 +31,7 @@ function loadEnv() {
         }
       }
     });
-    console.log("[Main] .env file loaded");
+    console.log("[Main] .env ファイル読み込み完了");
   }
 }
 
@@ -43,6 +44,7 @@ let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let trayAnimationInterval: NodeJS.Timeout | null = null;
 let isEyeOpen = true;
+let isSessionRunning = false; // セッション実行中フラグ
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -76,39 +78,39 @@ function createWindow() {
 }
 
 /**
- * Create system tray icon with blinking animation
- * Using macOS SFSymbols for licensing safety
+ * システムトレイアイコンを作成（まばたきアニメーション付き）
+ * macOS SF Symbols を使用（ライセンス安全）
  */
 function createTrayIcon() {
-  // SF Symbols "eyes" - no licensing concerns, Apple-provided
+  // SF Symbols "eyes" - Apple提供
   const eyeOpenIcon = nativeImage.createFromNamedImage("eyes", [16, 16]);
   tray = new Tray(eyeOpenIcon);
   tray.setToolTip("Focus Eye - セッション実行中");
-  console.log("[Tray] Created tray icon with SF Symbol 'eyes'");
+  console.log("[Tray] SF Symbol 'eyes' でトレイアイコン作成完了");
 }
 
 /**
- * Start tray icon blinking animation
+ * トレイアイコンアニメーションを開始
  */
 function startTrayAnimation() {
   if (trayAnimationInterval) return;
   
-  // SF Symbols for blinking animation
+  // SF Symbols まばたきアニメーション用
   const eyeOpenIcon = nativeImage.createFromNamedImage("eyes", [16, 16]);
   const eyeClosedIcon = nativeImage.createFromNamedImage("eyes.closed", [16, 16]);
 
-  console.log("[Tray] Starting eye animation with SF Symbols");
+  console.log("[Tray] SF Symbols で目のアニメーション開始");
   
-  // Blinking pattern: open (2s) → closed (100ms) → repeat
+  // まばたきパターン: 開く (2s) → 閉じる (100ms) → 繰り返し
   trayAnimationInterval = setInterval(() => {
     if (!tray) return;
     
     if (isEyeOpen) {
-      // Blink: close eyes briefly
+      // まばたき: 目を一時的に閉じる
       tray.setImage(eyeClosedIcon);
       isEyeOpen = false;
       
-      // Reopen after 100ms
+      // 100ms後に再度開く
       setTimeout(() => {
         if (tray && !isEyeOpen) {
           tray.setImage(eyeOpenIcon);
@@ -116,14 +118,14 @@ function startTrayAnimation() {
         }
       }, 100);
     }
-  }, 2000); // Blink every 2 seconds
+  }, 2000); // 2秒ごとにまばたき
 }
 
 /**
- * Stop tray icon animation and remove tray
+ * トレイアイコンアニメーションを停止してトレイを削除
  */
 function stopTrayAnimation() {
-  console.log("[Tray] Stopping eye animation");
+  console.log("[Tray] 目のアニメーション停止");
   
   if (trayAnimationInterval) {
     clearInterval(trayAnimationInterval);
@@ -139,35 +141,35 @@ function stopTrayAnimation() {
 }
 
 /**
- * Show session completion notification
+ * セッション完了通知を表示（AppleScript 使用）
  */
 function showSessionNotification(result: SessionResult, goalTitle?: string) {
-  const duration = Math.round(result.durationMs / 1000 / 60); // Convert to minutes
+  const duration = Math.round(result.durationMs / 1000 / 60); // 分に変換
   const focusScore = result.taskRelevanceScore ? Math.round(result.taskRelevanceScore * 100) : 0;
   
-  const notification = new Notification({
-    title: "✅ セッション完了",
-    body: `${goalTitle || "セッション"}が完了しました！\n⏱️ ${duration}分 | 📊 集中度 ${focusScore}%`,
-    icon: nativeImage.createFromNamedImage("eyes", [64, 64]),
-    urgency: "normal",
-    silent: false,
-  });
-
-  notification.show();
-
-  // Click notification to bring window to front
-  notification.on("click", () => {
-    if (mainWindow) {
-      mainWindow.show();
-      mainWindow.focus();
-    }
-  });
-
-  console.log("[Notification] Session completion notification shown");
+  const title = "セッション完了";
+  const subtitle = goalTitle || "セッション";
+  const message = `${duration}分作業 | 集中度 ${focusScore}%`;
+  
+  // macOS のみ通知を表示
+  if (process.platform !== "darwin") {
+    console.log("[Notification] macOS 以外のプラットフォームでは通知非対応");
+    return;
+  }
+  
+  try {
+    // AppleScript で確実に通知を表示
+    const script = `display notification "${message.replace(/"/g, '\\"')}" with title "${title.replace(/"/g, '\\"')}" subtitle "${subtitle.replace(/"/g, '\\"')}" sound name "Glass"`;
+    execSync(`osascript -e '${script}'`);
+    
+    console.log("[Notification] セッション完了通知を表示: " + goalTitle);
+  } catch (error) {
+    console.error("[Notification] 通知表示エラー:", error);
+  }
 }
 
 app.on("ready", async () => {
-  await initializeDatabase();
+  // DB初期化はもはや自動実行されません。ユーザーが init:database IPC を呼び出す時のみ初期化されます
   createWindow();
 });
 app.on("window-all-closed", () => {
@@ -186,7 +188,23 @@ app.on("before-quit", () => {
 });
 
 /**
- * IPC Handler: Start session and collect app logs
+ * IPC ハンドラ: データベースを初期化
+ */
+ipcMain.handle("init:database", async (): Promise<{ success: boolean; message?: string; error?: string }> => {
+  try {
+    console.log("[IPC] DB初期化リクエスト受信");
+    await initializeDatabase();
+    console.log("[IPC] DB初期化成功");
+    return { success: true, message: "Database initialized successfully" };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("[IPC] DB初期化エラー:", errorMsg);
+    return { success: false, error: errorMsg };
+  }
+});
+
+/**
+ * IPC ハンドラ: セッションを開始してアプリケーションログを収集
  */
 ipcMain.handle("session:start", async (event, req: IpcSessionRequest): Promise<IpcSessionResponse> => {
   try {
@@ -194,14 +212,24 @@ ipcMain.handle("session:start", async (event, req: IpcSessionRequest): Promise<I
       return { success: false, error: "systemUtils not available (unsupported platform)" };
     }
 
+    // DBが初期化されているか確認
+    try {
+      getDatabase();
+    } catch {
+      return { success: false, error: "Database not initialized. Please initialize the database first by calling init:database" };
+    }
+
     setUseAutomation(req.enableAutomation ?? false);
     console.log(`[IPC] Starting session: ${req.sessionTimeMs}ms, automation=${req.enableAutomation}, goalId=${req.goalId}`);
 
-    // Start tray icon animation
+    // セッション実行中フラグをオン
+    isSessionRunning = true;
+
+    // トレイアイコンアニメーション開始
     createTrayIcon();
     startTrayAnimation();
 
-    // If goalId is provided, get goal title and use it as taskTitle
+    // goalIdが指定されている場合、ゴールタイトルを取得して taskTitle として使用
     let taskTitle = req.taskTitle || "Untitled";
     if (req.goalId) {
       const goalRepo = new GoalRepository();
@@ -216,8 +244,8 @@ ipcMain.handle("session:start", async (event, req: IpcSessionRequest): Promise<I
     const appLogs: AppLog[] = [];
     const checkIntervalMs = 5000;
 
-    // Collect app logs during session
-    while (Date.now() - sessionStartTime < req.sessionTimeMs) {
+    // セッション中のアプリケーションログを収集
+    while (isSessionRunning && Date.now() - sessionStartTime < req.sessionTimeMs) {
       try {
         const fg = await systemUtils.getForegroundApp();
         if (typeof fg === "object") {
@@ -234,46 +262,46 @@ ipcMain.handle("session:start", async (event, req: IpcSessionRequest): Promise<I
         console.error("getForegroundApp error:", e);
       }
 
-      // Wait before next check
+      // 次のチェックまで待機
       await new Promise((resolve) => setTimeout(resolve, checkIntervalMs));
     }
 
     const sessionEndTime = Date.now();
-    console.log(`[IPC] Collected ${appLogs.length} app logs during session`);
-    console.log("[IPC] Sample logs:", appLogs.slice(0, 3));
+    console.log(`[IPC] セッション中に ${appLogs.length} 件のアプリログを収集`);
+    console.log("[IPC] サンプルログ:", appLogs.slice(0, 3));
     const logsWithBrowsing = appLogs.filter(log => log.browsing);
-    console.log(`[IPC] Logs with browsing field: ${logsWithBrowsing.length}`);
+    console.log(`[IPC] browsing フィールドありのログ: ${logsWithBrowsing.length}`);
     if (logsWithBrowsing.length > 0) {
-      console.log("[IPC] Sample browsing data:", logsWithBrowsing.slice(0, 3));
+      console.log("[IPC] ブラウジングデータサンプル:", logsWithBrowsing.slice(0, 3));
     }
     
     const { appSummary, categorySummary } = calculateUsageSummary(appLogs);
 
-    // Call AI classification for OTHER/BROWSER apps (blocking to ensure scores are calculated)
-    console.log("[IPC] Classifying OTHER/BROWSER apps with AI...");
+    // OTHER/BROWSERアプリのAI分類を呼び出し（スコア計算を確保するためブロッキング）
+    console.log("[IPC] OTHER/BROWSER アプリを AI で分類中...");
     try {
-      // Determine which categories to include based on browser automation
+      // ブラウザ自動化に基づいて含めるカテゴリを決定
       const categoriesToFilter = req.enableAutomation 
-        ? ["OTHER", "BROWSER"]  // Include BROWSER only when automation enabled
-        : ["OTHER"];              // Only OTHER when automation disabled
+        ? ["OTHER", "BROWSER"]  // 自動化有効時のみBROWSERを含める
+        : ["OTHER"];              // 自動化無効時はOTHERのみ
 
       console.log(`[IPC] Browser automation: ${req.enableAutomation}, filtering categories:`, categoriesToFilter);
 
-      // Extract apps that were classified as OTHER or BROWSER
+      // OTHER または BROWSER に分類されたアプリを抽出
       const otherApps = appLogs
         .filter((log) => categoriesToFilter.includes(log.category))
         .reduce(
           (acc, log) => {
             const existing = acc.find((a) => a.app_name === log.appDisplayName);
             if (existing) {
-              // Collect window titles
+              // ウィンドウタイトルを収集
               if (log.browsing) {
                 existing.window_titles_sample.push(log.browsing);
               }
             } else {
               acc.push({
                 app_name: log.appDisplayName,
-                seconds: 0, // Will be calculated later
+                seconds: 0, // 後で計算される
                 window_titles_sample: log.browsing ? [log.browsing] : [],
               });
             }
@@ -282,9 +310,9 @@ ipcMain.handle("session:start", async (event, req: IpcSessionRequest): Promise<I
           [] as Array<{ app_name: string; seconds: number; window_titles_sample: string[] }>
         );
 
-      // Add time data from appSummary
+      // appSummary の時間データを追加
       otherApps.forEach((app) => {
-        app.seconds = (appSummary[app.app_name] ?? 0) / 1000; // Convert ms to seconds
+        app.seconds = (appSummary[app.app_name] ?? 0) / 1000; // ミリ秒から秒に変換
       });
 
       let finalLogs = appLogs;
@@ -297,26 +325,26 @@ ipcMain.handle("session:start", async (event, req: IpcSessionRequest): Promise<I
         console.log(`[IPC] otherApps details:`, JSON.stringify(otherApps, null, 2));
         const aiResult = await classifyOtherAppsWithAI(otherApps, taskTitle, req.enableAutomation);
         if (aiResult) {
-          console.log("[IPC] AI classification received:", aiResult);
-          // Apply AI classification and scores to logs
+          console.log("[IPC] AI 分類結果を受信:", aiResult);
+          // AI分類とスコアをログに適用
           finalLogs = applyAIClassificationToLogs(appLogs, aiResult) as AppLog[];
           const { categorySummary: newCategorySummary } = calculateUsageSummary(finalLogs);
           finalCategorySummary = newCategorySummary;
-          console.log("[IPC] Updated category summary:", newCategorySummary);
+          console.log("[IPC] カテゴリサマリ更新:", newCategorySummary);
         }
       } else {
-        console.log("[IPC] No OTHER apps to classify");
+        console.log("[IPC] 分類すべき OTHER アプリなし");
       }
 
-      // Apply task relevance scores to all logs (including non-OTHER categories)
+      // 全ログにタスク関連スコアを適用（OTHER以外のカテゴリを含む）
       const logsWithScores = applyTaskRelevanceScores(finalLogs);
-      console.log("[IPC] Sample logs with scores:", logsWithScores.slice(0, 3));
+      console.log("[IPC] スコア付きログサンプル:", logsWithScores.slice(0, 3));
 
-      // Calculate task relevance metrics
+      // タスク関連性メトリクスを計算
       const taskMetrics = calculateTaskRelevanceMetrics(logsWithScores);
-      console.log("[IPC] Task relevance metrics:", taskMetrics);
+      console.log("[IPC] タスク関連性メトリクス:", taskMetrics);
 
-      // Save session to database
+      // セッションをデータベースに保存
       const sessionRepo = new SessionRepository();
 
       const savedSession = sessionRepo.create({
@@ -339,7 +367,7 @@ ipcMain.handle("session:start", async (event, req: IpcSessionRequest): Promise<I
         is_demo: false,
       });
 
-      console.log("[IPC] Session saved to DB with ID:", savedSession.id);
+      console.log("[IPC] セッションを DB に保存完了 ID:", savedSession.id);
 
       const result: SessionResult = {
         startTime: sessionStartTime,
@@ -353,9 +381,12 @@ ipcMain.handle("session:start", async (event, req: IpcSessionRequest): Promise<I
         taskIrrelevantTimeMs: taskMetrics.taskIrrelevantTimeMs,
       };
 
-      console.log("[IPC] Session completed:", result);
+      console.log("[IPC] セッション完了:", result);
       
-      // Stop tray icon animation and show notification
+      // セッション実行中フラグをオフ
+      isSessionRunning = false;
+      
+      // トレイアイコンアニメーション停止と通知表示
       stopTrayAnimation();
       showSessionNotification(result, taskTitle);
       
@@ -363,7 +394,7 @@ ipcMain.handle("session:start", async (event, req: IpcSessionRequest): Promise<I
     } catch (e) {
       console.error("[IPC] AI classification failed:", e);
       
-      // Return result without AI classification
+      // AI分類なしで結果を返す
       const result: SessionResult = {
         startTime: sessionStartTime,
         endTime: sessionEndTime,
@@ -373,10 +404,13 @@ ipcMain.handle("session:start", async (event, req: IpcSessionRequest): Promise<I
         categoryUsageSummary: categorySummary,
       };
       
-      // Stop tray icon animation on error path too
+      // エラーパスでもトレイアイコンアニメーション停止
       stopTrayAnimation();
       
-      // Show notification even if AI failed
+      // セッション実行中フラグをオフ
+      isSessionRunning = false;
+      
+      // AI失敗時も通知を表示
       showSessionNotification(result, taskTitle);
       
       return { success: true, result };
@@ -388,19 +422,45 @@ ipcMain.handle("session:start", async (event, req: IpcSessionRequest): Promise<I
     // Stop tray icon animation on error
     stopTrayAnimation();
     
+    // セッション実行中フラグをオフ
+    isSessionRunning = false;
+    
     return { success: false, error: errorMsg };
   }
 });
 
 /**
- * IPC Handler: Get active goals
+ * IPC ハンドラ: セッションを中断
+ */
+ipcMain.handle("session:stop", async (): Promise<{ success: boolean; message?: string }> => {
+  try {
+    if (!isSessionRunning) {
+      return { success: false, message: "No session is currently running" };
+    }
+    
+    console.log("[IPC] セッション中断リクエスト受信");
+    isSessionRunning = false;
+    
+    // Stop tray icon animation
+    stopTrayAnimation();
+    
+    return { success: true, message: "Session interrupted" };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("[IPC] Session stop error:", errorMsg);
+    return { success: false, message: errorMsg };
+  }
+});
+
+/**
+ * IPC ハンドラ: 有効なゴールを取得
  */
 ipcMain.handle("goals:getActive", async (): Promise<{ success: boolean; goals?: any[]; error?: string }> => {
   try {
-    console.log("[IPC] Getting active goals...");
+    console.log("[IPC] アクティブなゴールを取得中...");
     const goalRepo = new GoalRepository();
     const goals = goalRepo.findActive();
-    console.log("[IPC] Found goals:", goals);
+    console.log("[IPC] 見つかったゴール:", goals);
     return { success: true, goals };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -410,20 +470,20 @@ ipcMain.handle("goals:getActive", async (): Promise<{ success: boolean; goals?: 
 });
 
 /**
- * IPC Handler: Create a new goal
+ * IPC ハンドラ: 新しいゴールを作成
  */
 ipcMain.handle("goals:create", async (event, goalData: any): Promise<{ success: boolean; goal?: any; error?: string }> => {
   try {
-    console.log("[IPC] ============ Creating goal ============");
-    console.log("[IPC] Received goalData:", goalData);
-    console.log("[IPC] goalData type:", typeof goalData);
-    console.log("[IPC] goalData keys:", Object.keys(goalData || {}));
+    console.log("[IPC] ============ ゴール作成中 ============");
+    console.log("[IPC] 受信した goalData:", goalData);
+    console.log("[IPC] goalData 型:", typeof goalData);
+    console.log("[IPC] goalData キー:", Object.keys(goalData || {}));
     
     const goalRepo = new GoalRepository();
-    console.log("[IPC] GoalRepository instantiated");
+    console.log("[IPC] GoalRepository インスタンス化完了");
     
     const goal = goalRepo.create(goalData);
-    console.log("[IPC] Goal created successfully:", goal);
+    console.log("[IPC] ゴール作成成功:", goal);
     console.log("[IPC] =====================================");
     
     return { success: true, goal };
@@ -439,14 +499,14 @@ ipcMain.handle("goals:create", async (event, goalData: any): Promise<{ success: 
 });
 
 /**
- * IPC Handler: Get all goals (including inactive)
+ * IPC ハンドラ: 全ゴールを取得（無効なものを含む）
  */
 ipcMain.handle("goals:getAll", async (): Promise<{ success: boolean; goals?: any[]; error?: string }> => {
   try {
-    console.log("[IPC] Getting all goals (including inactive)...");
+    console.log("[IPC] 全ゴールを取得中 (非アクティブも含む)...");
     const goalRepo = new GoalRepository();
     const goals = goalRepo.findAll();
-    console.log(`[IPC] Found ${goals.length} goals:`, goals);
+    console.log(`[IPC] ${goals.length} 件のゴールを発見:`);
     return { success: true, goals };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -456,14 +516,14 @@ ipcMain.handle("goals:getAll", async (): Promise<{ success: boolean; goals?: any
 });
 
 /**
- * IPC Handler: Get total session time for a specific goal
+ * IPC ハンドラ: 特定のゴールの総セッション時間を取得
  */
 ipcMain.handle("sessions:getTotalTimeByGoal", async (event, goalId: number): Promise<{ success: boolean; totalTime?: number; error?: string }> => {
   try {
-    console.log(`[IPC] Getting total session time for goal ${goalId}...`);
+    console.log(`[IPC] ゴール ${goalId} の総セッション時間を取得中...`);
     const sessionRepo = new SessionRepository();
     const totalTime = sessionRepo.getTotalTimeByGoal(goalId);
-    console.log(`[IPC] Total time for goal ${goalId}: ${totalTime}ms`);
+    console.log(`[IPC] ゴール ${goalId} の総時間: ${totalTime}ms`);
     return { success: true, totalTime };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
@@ -473,11 +533,11 @@ ipcMain.handle("sessions:getTotalTimeByGoal", async (event, goalId: number): Pro
 });
 
 /**
- * IPC Handler: Open URL in default browser
+ * IPC ハンドラ: URL をでフォルトブラウザで開く
  */
 ipcMain.handle("shell:openExternal", async (event, url: string): Promise<{ success: boolean; error?: string }> => {
   try {
-    console.log(`[IPC] Opening URL in default browser: ${url}`);
+    console.log(`[IPC] デフォルトブラウザで URL を開く: ${url}`);
     await shell.openExternal(url);
     return { success: true };
   } catch (error) {

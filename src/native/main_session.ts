@@ -21,7 +21,7 @@ type checked = {
  */
 const generateIntervalMS = function (factor: number, maxInterval: number, minInterval: number): number {
     const time = Math.floor(Math.random() * (maxInterval - minInterval) * factor + minInterval);
-    console.log("interval:" + time);
+    console.log("インターバル: " + time);
     return time;
 
 }
@@ -36,19 +36,19 @@ async function TaskSession(sessionTime: number,) {
     process.exit(1);
   }
 
-  // check runtime flag / env for enabling AppleScript Automation (Enhance Mode)
+  // AppleScript自動化（強化モード）を有効にするためにランタイムフラグ/環境をチェック
   const enableAutomationEnv = process.env.ENABLE_AUTOMATION === '1';
   const enableAutomationArg = process.argv.includes('--enable-automation');
   const enableAutomation = enableAutomationEnv || enableAutomationArg;
   setUseAutomation(Boolean(enableAutomation));
-  console.log('Automation (AppleScript) enabled:', enableAutomation);
+  console.log('Automation (AppleScript) 有効:', enableAutomation);
 
 
   // セッション時間までループ
   const startTime = Date.now();
   while (Date.now() - startTime < sessionTime) {
     await setTimeout(generateIntervalMS(checkIntervalFactor, MAX_INTERVAL_MS, MIN_INTERVAL_MS)); // ランダムな時間待機
-    // get foreground app
+    // 最前面アプリケーションを取得
     try {
       const fg = await systemUtils.getForegroundApp();
       if(typeof fg === 'object') {
@@ -58,19 +58,19 @@ async function TaskSession(sessionTime: number,) {
         console.log(fg);
         
       } else {
-        console.log('from getForegroundApp ->', fg);
+        console.log('getForegroundApp から ->', fg);
       }
     } catch (e: any) {
       console.error('getForegroundApp error ->', e && e.message ? e.message : e);
     }
 
-    // get idle time
+    // アイドル時間を取得
     try {
       const idle = (systemUtils) ? systemUtils.getIdleTime(): "none";
       console.log('getIdleTime ->', idle);
 
     } catch (e: any) {
-      console.error('getIdleTime error ->', e && e.message ? e.message : e);
+      console.error('getIdleTime エラー ->', e && e.message ? e.message : e);
     }
   }
 }

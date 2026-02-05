@@ -8,7 +8,9 @@ import GoalsStatsView from "./GoalsStatsView";
 declare global {
   interface Window {
     electronAPI?: {
+      initDatabase: () => Promise<{ success: boolean; message?: string; error?: string }>;
       startSession: (req: IpcSessionRequest) => Promise<{ success: boolean; result?: SessionResult; error?: string }>;
+      stopSession: () => Promise<{ success: boolean; message?: string }>;
       getActiveGoals: () => Promise<{ success: boolean; goals?: Goal[]; error?: string }>;
       getAllGoals: () => Promise<{ success: boolean; goals?: Goal[]; error?: string }>;
       createGoal: (goalData: NewGoal) => Promise<{ success: boolean; goal?: Goal; error?: string }>;
@@ -32,15 +34,16 @@ export default function App() {
   const [taskIntent, setTaskIntent] = useState("");
   const [sessionDurationValue, setSessionDurationValue] = useState(1);
   const [sessionDurationUnit, setSessionDurationUnit] = useState<"seconds" | "minutes" | "hours">("minutes");
-  const [enableAutomation, setEnableAutomation] = useState(false);
+  const [enableAutomation, setEnableAutomation] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState<SessionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [debugLog, setDebugLog] = useState<string[]>([]);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [isInitializingDb, setIsInitializingDb] = useState(false);
 
-  // Load all goals on mount (for statistics view)
+  // マウント時にすべてのゴールをロード（統計表示用）
   useEffect(() => {
     const loadGoals = async () => {
       if (!window.electronAPI?.getAllGoals) return;
@@ -54,7 +57,7 @@ export default function App() {
     loadGoals();
   }, []);
 
-  // Helper: Convert duration to milliseconds
+  // ヘルパー: 期間をミリ秒に変換
   const convertToMs = (value: number, unit: "seconds" | "minutes" | "hours"): number => {
     switch (unit) {
       case "seconds":
@@ -99,7 +102,7 @@ export default function App() {
     }
   };
 
-  // Twitterで共有
+  // Xで共有
   const handleShareTwitter = async () => {
     const text = generateTweetText();
     const encodedText = encodeURIComponent(text);
@@ -111,13 +114,13 @@ export default function App() {
         setError(`Failed to open Twitter: ${result.error}`);
       }
     } else {
-      // Fallback for non-Electron environment
+      // 非Electron環境用フォールバック
       window.open(url, "twitter-share", "width=550,height=420");
     }
   };
 
   const handleStartSession = async () => {
-    console.log("[App] handleStartSession called");
+    console.log("[App] handleStartSession 呼び出し");
     console.log("[App] window.electronAPI:", window.electronAPI);
     
     if (!window.electronAPI) {
@@ -150,6 +153,61 @@ export default function App() {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setIsRunning(false);
+    }
+  };
+
+  const handleStopSession = async () => {
+    if (!window.electronAPI) {
+      setError("Electron API not available");
+      return;
+    }
+
+    // すでに停止処理中の場合は何もしない
+    if (!isRunning) {
+      return;
+    }
+
+    // すぐにUI状態を更新して二重押しを防ぐ
+    setIsRunning(false);
+
+    try {
+      const response = await window.electronAPI.stopSession();
+      if (response.success) {
+        console.log("[App] セッション中断:", response.message);
+        // セッションは自動的に終了し、結果が返される
+      } else {
+        setError(response.message || "Failed to stop session");
+        // エラーの場合は状態を元に戻す
+        setIsRunning(true);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      // エラーの場合は状態を元に戻す
+      setIsRunning(true);
+    }
+  };
+
+  const handleInitializeDatabase = async () => {
+    setIsInitializingDb(true);
+    setError(null);
+    
+    try {
+      if (!window.electronAPI?.initDatabase) {
+        setError("Electron API not available");
+        return;
+      }
+
+      const response = await window.electronAPI.initDatabase();
+      if (response.success) {
+        setSuccessMessage("✅ Database initialized successfully!");
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        setError(`Database initialization failed: ${response.error}`);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setIsInitializingDb(false);
     }
   };
 
@@ -213,7 +271,7 @@ export default function App() {
         setError(null);
         setSuccessMessage(`✅ Goal "${response.goal.title}" created successfully! (ID: ${response.goal.id})`);
         
-        // Clear success message after 5 seconds
+        // 5秒後に成功メッセージをクリア
         setTimeout(() => setSuccessMessage(null), 5000);
       } else {
         const errMsg = `❌ Failed: ${response.error || "Unknown error"}`;
@@ -369,7 +427,7 @@ export default function App() {
               </select>
             </div>
 
-            {/* Task Title: Only show when no goal is selected (ad-hoc session) */}
+            {/* タスクタイトル: ゴール未選択時のみ表示（アドホックセッション） */}
             {!selectedGoalId && (
               <div>
                 <label className="block text-sm font-medium text-slate-200 mb-2">
@@ -440,25 +498,45 @@ export default function App() {
               </label>
             </div>
 
-            <button
-              onClick={handleStartSession}
-              disabled={isRunning}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-500 text-white font-bold rounded-lg transition"
-            >
-              {isRunning ? "セッション実行中..." : "[セッション開始]"}
-            </button>
+            <div className="flex gap-4">
+              <button
+                onClick={handleStartSession}
+                disabled={isRunning}
+                className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-500 text-white font-bold rounded-lg transition"
+              >
+                {isRunning ? "セッション実行中..." : "[セッション開始]"}
+              </button>
+              
+              {isRunning && (
+                <button
+                  onClick={handleStopSession}
+                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition"
+                >
+                  中断
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Error Display */}
+        {/* エラー表示 */}
         {error && (
           <div className="bg-red-900 border border-red-700 rounded-lg p-4 mb-8 text-red-200">
             <p className="font-bold">エラー</p>
             <p>{error}</p>
+            {error.includes("Database not initialized") && (
+              <button
+                onClick={handleInitializeDatabase}
+                disabled={isInitializingDb}
+                className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-500 text-white font-bold rounded transition"
+              >
+                {isInitializingDb ? "初期化中..." : "データベースを初期化"}
+              </button>
+            )}
           </div>
         )}
 
-        {/* Success Display */}
+        {/* 成功メッセージ表示 */}
         {successMessage && (
           <div className="bg-green-900 border border-green-700 rounded-lg p-4 mb-8 text-green-200">
             <p>{successMessage}</p>
@@ -562,7 +640,7 @@ export default function App() {
               </div>
                     )}
 
-                    {/* Category Usage */}
+                    {/* カテゴリ使用時間 */}
                     <div className="mb-8">
                       <h3 className="text-lg font-bold text-white mb-4">カテゴリ別使用時間</h3>
                       <div className="space-y-2">

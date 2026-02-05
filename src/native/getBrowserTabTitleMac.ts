@@ -1,10 +1,10 @@
-// AppleScript helper to get active browser tab title
+// AppleScript ヘルパーでアクティブブラウザタブタイトルを取得
 import { execFile } from "child_process";
 import { promisify } from "util";
 
 const execFileAsync = promisify(execFile);
 
-// AppleScript snippets for getting active tab titles from browsers
+// ブラウザからアクティブタブタイトルを取得するための AppleScript スニペット
 const appleScriptCommands: Record<string, string> = {
   Safari: `tell application "Safari" to get name of current tab of front window`,
   "Google Chrome": `tell application "Google Chrome" to get title of active tab of front window`,
@@ -13,29 +13,29 @@ const appleScriptCommands: Record<string, string> = {
 };
 
 /**
- * Get active browser tab title via AppleScript (macOS only).
- * @param appName The browser application name (e.g., "Google Chrome", "Safari")
- * @returns Promise<string> The active tab title, or empty string if not available
+ * AppleScript 経由でアクティブブラウザタブタイトルを取得 (macOS のみ)。
+ * @param appName ブラウザアプリケーション名 (e.g., "Google Chrome", "Safari")
+ * @returns Promise<string> アクティブタブタイトル、または利用不可的な場合は空文字列
  */
 export async function getActiveBrowserTabTitleMac(appName: string): Promise<string> {
   const script = appleScriptCommands[appName];
   if (!script) {
-    console.log("unknown browser");
+    console.log("不明なブラウザ");
     
-    return ""; // Not a known browser
+    return ""; // 既知のブラウザではない
   }
   try {
     const { stdout } = await execFileAsync("osascript", ["-e", script], {
       timeout: 2000,
       encoding: "utf8",
     });
-    console.log("browsertitle " + stdout.trim());
+    console.log("ブラウザタイトル: " + stdout.trim());
     
     return stdout.trim();
   } catch (e) {
-    console.log("error: " + e);
+    console.log("エラー: " + e);
 
-    // AppleScript execution failed or timed out
+    // AppleScript 実行失敗またはタイムアウト
     return "";
   }
 }

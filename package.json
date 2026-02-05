@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.969.0",
+    "node-notifier": "^10.0.1",
     "osascript": "^1.2.0",
     "ps-list": "^8.1.1",
     "react": "^18.2.0",
@@ -19,6 +20,7 @@
     "sql.js": "^1.13.0"
   },
   "devDependencies": {
+    "@types/node-notifier": "^8.0.5",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@types/sql.js": "^1.4.9",

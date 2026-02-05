@@ -1,4 +1,4 @@
-// NSWorkspace.shared.frontmostApplication - using pre-built macOS binary + AppleScript
+// NSWorkspace.shared.frontmostApplication - ビルド済み macOS バイナリ + AppleScript を使用
 
 import os from "os";
 import { execFileSync } from "child_process";
@@ -8,13 +8,13 @@ import { fileURLToPath } from "url";
 import { getActiveBrowserTabTitleMac } from "./getBrowserTabTitleMac.js";
 
 
-// Resolve directory in both ESM (import.meta.url) and CommonJS (__dirname) runtimes.
+// ESM (import.meta.url) と CommonJS (__dirname) の両方の実行時でディレクトリを解決
 let __dirnamePath: string;
 try {
-  // ESM environment
+  // ESM環境
   __dirnamePath = path.dirname(fileURLToPath(import.meta.url));
 } catch (e) {
-  // Fallback for CommonJS
+  // CommonJSのフォールバック
   // @ts-ignore
   __dirnamePath = __dirname;
 }
@@ -25,7 +25,7 @@ const platform = os.platform();
  * Windows実装
  */
 function windowsApi() {
-  console.log("windowsApi is on working in progress!");
+  console.log("windowsApi は開発中です!");
   
   // // --- GetForegroundWindow ---
   // const user32 = ffi.Library("user32", {
@@ -72,15 +72,15 @@ export function setUseAutomation(v: boolean) { useAutomation = v; }
  * macOS実装
  */
 function macApi() {
-  // using a small Objective-C helper compiled as a binary in the same folder.
-  // The helper prints the frontmost application's info as JSON to stdout.
+  // 同じフォルダのバイナリとしてコンパイルされた小さなObjective-Cヘルパーを使用。
+  // ヘルパーは最前面のアプリケーション情報をJSON形式で標準出力に出力。
 
-  // If true, call AppleScript helper to get active browser tab title (requires Automation permission).
+  // trueの場合、AppleScriptヘルパーを呼び出してアクティブブラウザタブタイトルを取得（自動化権限が必要）。
 
   type ForegroundInfo = {
     appDisplayName: string;
     appExecutable: string;
-    // browsing is optional; only populated when automation is enabled and available
+    // browsing はオプション; 自動化が有効かつ利用可能な場合のみ設定される
     browsing?: string;
   };
 
@@ -89,12 +89,12 @@ function macApi() {
       // console.log("[getForegroundApp] platform:", platform);
       // console.log("[getForegroundApp] __dirnamePath:", __dirnamePath);
       
-      // Check both dist and src paths
+      // dist と src の両方のパスをチェック
       let bin = path.join(__dirnamePath, "get_frontmost_app");
       // console.log("[getForegroundApp] binary path (dist):", bin);
       
       if (!fs.existsSync(bin)) {
-        // Fallback to src path when running from dist
+        // dist から実行時に src パスにフォールバック
         const srcPath = path.join(__dirnamePath, "..", "..", "src", "native", "get_frontmost_app");
         // console.log("[getForegroundApp] binary path (src fallback):", srcPath);
         if (fs.existsSync(srcPath)) {
@@ -121,8 +121,8 @@ function macApi() {
       
       try {
         const parsed = JSON.parse(out) as ForegroundInfo;
-        console.log("[getForegroundApp] parsed JSON:", parsed);
-        // optionally attempt to get browsing info only when enabled
+        console.log("[getForegroundApp] パース済み JSON:", parsed);
+        // 有効な場合のみ、オプションでブラウジング情報を取得
         let browsing = "";
         if (useAutomation) {
           try {
@@ -131,14 +131,14 @@ function macApi() {
             browsing = "";
           }
         }
-        // ensure fields exist
+        // フィールドが存在することを確認
         return {
           appDisplayName: parsed.appDisplayName || "",
           appExecutable: parsed.appExecutable || "",
           ...(browsing ? { browsing } : {}),
         };
       } catch (e) {
-        // fallback: tab-separated fallback format
+        // フォールバック: タブ区切りフォールバック形式
         // console.log("[getForegroundApp] JSON parse failed, trying tab-separated format");
         const parts = out.split('\t');
         let browsing = "";
@@ -164,20 +164,20 @@ function macApi() {
   }
 
   function getIdleTime(): number {
-    // Use ioreg to get HIDIdleTime in nanoseconds
+    // ioreg を使用してナノ秒単位でHIDIdleTimeを取得
     try {
       const out = execFileSync("ioreg", ["-c", "IOHIDSystem"], { encoding: "utf8" });
       const m = out.match(/HIDIdleTime[^0-9]*([0-9]+)/);
       if (m && m[1]) {
         const nanos = Number(m[1]);
         if (!Number.isNaN(nanos)) {
-          return nanos / 1e9; // convert to seconds
+          return nanos / 1e9; // 秒に変換
         }
       }
       throw new Error("HIDIdleTime not found in ioreg output");
     } catch (e: any) {
       console.error(`getIdleTime fallback failed: ${e.message}`);
-      return 0; // fallback: assume not idle
+      return 0; // フォールバック: アイドルでないと想定
     }
   }
 

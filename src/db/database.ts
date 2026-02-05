@@ -1,5 +1,5 @@
 /**
- * SQLite Database Connection and Initialization (SQL.js)
+ * SQLite データベース接続・初期化 (SQL.js)
  */
 import initSqlJs, { Database as SqlJsDatabase, SqlJsStatic } from "sql.js";
 import fs from "fs";
@@ -14,8 +14,8 @@ let db: SqlJsDatabase | null = null;
 let SQL: SqlJsStatic | null = null;
 
 /**
- * Get database file path (Development only)
- * - Always use: ./data/focus-eye.db
+ * データベースファイルパスを取得（開発環境のみ）
+ * - 常に使用: ./data/focus-eye.db
  */
 function getDatabasePath(): string {
   const devPath = path.join(process.cwd(), "data");
@@ -26,7 +26,7 @@ function getDatabasePath(): string {
 }
 
 /**
- * Initialize database and create tables
+ * データベースを初期化してテーブルを作成
  */
 export async function initializeDatabase(): Promise<SqlJsDatabase> {
   if (db) {
@@ -34,24 +34,24 @@ export async function initializeDatabase(): Promise<SqlJsDatabase> {
   }
 
   const dbPath = getDatabasePath();
-  console.log(`[DB] Initializing database at: ${dbPath}`);
+  console.log(`[DB] データベース初期化中: ${dbPath}`);
 
-  // Initialize SQL.js
+  // SQL.js を初期化
   SQL = await initSqlJs();
 
-  // Load existing database or create new one
+  // 既存のデータベースをロード、またはまったく新しいものを作成
   if (fs.existsSync(dbPath)) {
     const buffer = fs.readFileSync(dbPath);
     db = new SQL.Database(buffer);
-    console.log("[DB] Loaded existing database");
+    console.log("[DB] 既存のデータベースをロード完了");
     
-    // Check if tables exist
+    // テーブルが存在するかをチェック
     const result = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='goals'");
     const tablesExist = result.length > 0 && result[0].values.length > 0;
     
     if (!tablesExist) {
-      console.log("[DB] Tables not found, creating schema...");
-      // Load and execute schema only if tables don't exist
+      console.log("[DB] テーブルが見つからないため、スキーマ作成中...");
+      // テーブルが存在しない場合のみスキーマをロードして実行
       const schemaPath = path.join(__dirname, "schema.sql");
       const schemaSrc = path.join(__dirname, "..", "..", "src", "db", "schema.sql");
       
@@ -69,9 +69,9 @@ export async function initializeDatabase(): Promise<SqlJsDatabase> {
     }
   } else {
     db = new SQL.Database();
-    console.log("[DB] Created new database");
+    console.log("[DB] 新規データベース作成完了");
     
-    // Load and execute schema for new database
+    // 新しいデータベース用にスキーマをロードして実行
     const schemaPath = path.join(__dirname, "schema.sql");
     const schemaSrc = path.join(__dirname, "..", "..", "src", "db", "schema.sql");
     
@@ -88,13 +88,13 @@ export async function initializeDatabase(): Promise<SqlJsDatabase> {
     saveDatabaseToFile();
   }
   
-  console.log("[DB] Database initialized successfully");
+  console.log("[DB] データベース初期化成功");
 
   return db;
 }
 
 /**
- * Save database to file
+ * データベースをファイルに保存
  */
 export function saveDatabaseToFile(): void {
   if (!db) return;
@@ -106,7 +106,7 @@ export function saveDatabaseToFile(): void {
 }
 
 /**
- * Get database instance
+ * データベースインスタンスを取得
  */
 export function getDatabase(): SqlJsDatabase {
   if (!db) {
@@ -116,13 +116,13 @@ export function getDatabase(): SqlJsDatabase {
 }
 
 /**
- * Close database connection
+ * データベース接続を閉じる
  */
 export function closeDatabase(): void {
   if (db) {
     saveDatabaseToFile();
     db.close();
     db = null;
-    console.log("[DB] Database connection closed");
+    console.log("[DB] データベース接続をクローズしました");
   }
 }
