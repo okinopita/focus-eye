@@ -1,9 +1,9 @@
-import ffi from "ffi-napi";
-import ref from "ref-napi";
-import StructType from "ref-struct-napi";
-import os from "os";
+// import ffi from "ffi-napi";
+// import ref from "ref-napi";
+// import StructType from "ref-struct-napi";
+// import os from "os";
 
-const platform = os.platform();
+// const platform = os.platform();
 
 /**
  * Windows実装
@@ -50,35 +50,35 @@ const platform = os.platform();
 /**
  * macOS実装
  */
-function macApi() {
-  const foundation = ffi.Library("/System/Library/Frameworks/AppKit.framework/AppKit", {
-    // NSWorkspace.eyedWorkspace.frontmostApplication.localizedName を直接は呼びにくいので
-    // 実際はネイティブブリッジ用の小さなObjective-Cプログラムをかませる必要あり。
-    // ここではダミーで示す
-  });
+// function macApi() {
+//   const foundation = ffi.Library("/System/Library/Frameworks/AppKit.framework/AppKit", {
+//     // NSWorkspace.eyedWorkspace.frontmostApplication.localizedName を直接は呼びにくいので
+//     // 実際はネイティブブリッジ用の小さなObjective-Cプログラムをかませる必要あり。
+//     // ここではダミーで示す
+//   });
 
-  const coreGraphics = ffi.Library("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", {
-    CGEventSourceSecondsSinceLastEventType: ["double", ["uint32", "uint32"]],
-  });
+//   const coreGraphics = ffi.Library("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", {
+//     CGEventSourceSecondsSinceLastEventType: ["double", ["uint32", "uint32"]],
+//   });
 
-  function getForegroundApp(): string {
-    // 実際には Objective-C ブリッジが必要
-    return "NotImplemented(macOS requires ObjC bridge)";
-  }
+//   function getForegroundApp(): string {
+//     // 実際には Objective-C ブリッジが必要
+//     return "NotImplemented(macOS requires ObjC bridge)";
+//   }
 
-  function getIdleTime(): number {
-    const kCGEventSourceStateHIDSystemState = 1;
-    const kCGAnyInputEventType = ~0 >>> 0; // 全イベント
-    return coreGraphics.CGEventSourceSecondsSinceLastEventType(
-      kCGEventSourceStateHIDSystemState,
-      kCGAnyInputEventType
-    );
-  }
+//   function getIdleTime(): number {
+//     const kCGEventSourceStateHIDSystemState = 1;
+//     const kCGAnyInputEventType = ~0 >>> 0; // 全イベント
+//     return coreGraphics.CGEventSourceSecondsSinceLastEventType(
+//       kCGEventSourceStateHIDSystemState,
+//       kCGAnyInputEventType
+//     );
+//   }
 
-  return { getForegroundApp, getIdleTime };
-}
+//   return { getForegroundApp, getIdleTime };
+// }
 
-// エクスポート: 実行環境に応じて切り替え
-export const systemUtils =
-//   platform === "win32" ? windowsApi() : platform === "darwin" ? macApi() : null;
-platform === "darwin" ? macApi() : null;
+// // エクスポート: 実行環境に応じて切り替え
+// export const systemUtils =
+// //   platform === "win32" ? windowsApi() : platform === "darwin" ? macApi() : null;
+// platform === "darwin" ? macApi() : null;

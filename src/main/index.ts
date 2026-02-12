@@ -169,7 +169,8 @@ function showSessionNotification(result: SessionResult, goalTitle?: string) {
 }
 
 app.on("ready", async () => {
-  // DB初期化はもはや自動実行されません。ユーザーが init:database IPC を呼び出す時のみ初期化されます
+  // 起動時に既存DBをロード（既存データは保持される）
+  await initializeDatabase();
   createWindow();
 });
 app.on("window-all-closed", () => {

@@ -2,7 +2,7 @@
  * React App Component - Session UI
  */
 import React, { useState, useEffect } from "react";
-import type { SessionResult, IpcSessionRequest, Goal, NewGoal } from "../common/types";
+import type { SessionResult, IpcSessionRequest, Goal, NewGoal, AppLog } from "../common/types";
 import GoalsStatsView from "./GoalsStatsView";
 
 declare global {
@@ -42,6 +42,7 @@ export default function App() {
   const [debugLog, setDebugLog] = useState<string[]>([]);
   const [copySuccess, setCopySuccess] = useState(false);
   const [isInitializingDb, setIsInitializingDb] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   // マウント時にすべてのゴールをロード（統計表示用）
   useEffect(() => {
@@ -288,13 +289,67 @@ export default function App() {
   };
 
   const formatDuration = (ms: number) => {
-    const sec = Math.round(ms / 1000);
-    return `${sec}s`;
+    const totalSec = Math.round(ms / 1000);
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    
+    if (min === 0) {
+      return `${sec}秒`;
+    } else if (sec === 0) {
+      return `${min}分`;
+    } else {
+      return `${min}分${sec}秒`;
+    }
   };
 
   const formatPercentage = (ms: number, totalMs: number) => {
     const pct = ((ms / totalMs) * 100).toFixed(1);
     return `${pct}%`;
+  };
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(category)) {
+        newSet.delete(category);
+      } else {
+        newSet.add(category);
+      }
+      return newSet;
+    });
+  };
+
+  const getAppsInCategory = (category: string, appLogs: AppLog[], usageSummary: Record<string, number>) => {
+    // カテゴリに属するログをフィルタリング
+    const categoryLogs = appLogs.filter(log => log.category === category);
+    
+    // アプリ名ごとに集計（browsingフィールドも含めて詳細化）
+    const appUsage = new Map<string, { ms: number; browsingTitles: Set<string> }>();
+    
+    categoryLogs.forEach(log => {
+      const key = log.appDisplayName;
+      const existing = appUsage.get(key);
+      
+      if (existing) {
+        // 既に追加されている場合は browsingTitles のみ追加
+        if (log.browsing) {
+          existing.browsingTitles.add(log.browsing);
+        }
+      } else {
+        const browsingTitles = new Set<string>();
+        if (log.browsing) {
+          browsingTitles.add(log.browsing);
+        }
+        // usageSummary から正確な使用時間を取得
+        const ms = usageSummary[key] || 0;
+        appUsage.set(key, { ms, browsingTitles });
+      }
+    });
+    
+    // 配列に変換してソート
+    return Array.from(appUsage.entries())
+      .map(([appName, data]) => ({ appName, ...data }))
+      .sort((a, b) => b.ms - a.ms);
   };
 
   return (
@@ -640,24 +695,76 @@ export default function App() {
               </div>
                     )}
 
-                    {/* カテゴリ使用時間 */}
+                    {/* カテゴリ使用時間（トグル形式） */}
                     <div className="mb-8">
                       <h3 className="text-lg font-bold text-white mb-4">カテゴリ別使用時間</h3>
                       <div className="space-y-2">
                         {Object.entries(result.categoryUsageSummary)
                           .filter(([_, ms]) => ms > 0)
                           .sort(([_, a], [__, b]) => b - a)
-                          .map(([category, ms]) => (
-                            <div key={category} className="flex items-center justify-between bg-slate-600 rounded p-3">
-                              <span className="text-slate-200 font-medium">{category}</span>
-                              <div className="flex items-center gap-4">
-                                <span className="text-slate-400">{formatDuration(ms)}</span>
-                                <span className="text-slate-300 font-bold w-12 text-right">
-                                  {formatPercentage(ms, result.durationMs)}
-                                </span>
+                          .map(([category, ms]) => {
+                            const isExpanded = expandedCategories.has(category);
+                            const appsInCategory = getAppsInCategory(category, result.appLogs, result.usageSummary);
+                            
+                            return (
+                              <div key={category} className="bg-slate-600/40 rounded-lg overflow-hidden border border-slate-500/30">
+                                {/* カテゴリヘッダー（クリック可能） */}
+                                <button
+                                  onClick={() => toggleCategory(category)}
+                                  className="w-full flex items-center justify-between p-4 hover:bg-slate-500/50 transition"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-slate-300 text-sm">
+                                      {isExpanded ? '▼' : '▶'}
+                                    </span>
+                                    <span className="text-slate-100 font-semibold text-lg">{category}</span>
+                                    <span className="text-slate-400 text-sm">({appsInCategory.length}個)</span>
+                                  </div>
+                                  <div className="flex items-center gap-4">
+                                    <span className="text-slate-300">{formatDuration(ms)}</span>
+                                    <span className="text-slate-100 font-bold w-14 text-right">
+                                      {formatPercentage(ms, result.durationMs)}
+                                    </span>
+                                  </div>
+                                </button>
+                                
+                                {/* 展開時：アプリ一覧 */}
+                                {isExpanded && (
+                                  <div className="bg-slate-700/60 px-4 pb-3 pt-1 space-y-2">
+                                    {appsInCategory.map((app, idx) => (
+                                      <div key={idx} className="pl-4 py-3 bg-slate-600/60 rounded border-l-2 border-slate-400">
+                                        <div className="flex items-center justify-between mb-1">
+                                          <span className="text-slate-100 font-medium">{app.appName}</span>
+                                          <div className="flex items-center gap-3">
+                                            <span className="text-slate-300 text-sm">{formatDuration(app.ms)}</span>
+                                            <span className="text-slate-200 text-sm w-14 text-right font-semibold">
+                                              {formatPercentage(app.ms, result.durationMs)}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        {/* ブラウザタイトル表示 */}
+                                        {app.browsingTitles.size > 0 && (
+                                          <div className="mt-2 pl-3 space-y-1">
+                                            {Array.from(app.browsingTitles).slice(0, 5).map((title, titleIdx) => (
+                                              <div key={titleIdx} className="text-slate-300 text-xs truncate flex items-start gap-1">
+                                                <span className="text-slate-400 flex-shrink-0">📄</span>
+                                                <span className="break-all">{title}</span>
+                                              </div>
+                                            ))}
+                                            {app.browsingTitles.size > 5 && (
+                                              <div className="text-slate-400 text-xs italic pl-4">
+                                                他 {app.browsingTitles.size - 5} 件のタイトル
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                       </div>
                     </div>
 
