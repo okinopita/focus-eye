@@ -28,16 +28,18 @@ export function categorizeApp(
   if (name.includes("visual studio") || name.includes("vscode") || name.includes("xcode") || name.includes("terminal") || name.includes("iterm")) {
     return "WORK";
   }
+  
+  // PRODUCTIVITY: 生産的だが関連性不明なツール
   if (name.includes("word") || name.includes("excel") || name.includes("notion") || name.includes("figma")) {
-    return "WORK";
+    return "PRODUCTIVITY";
   }
 
-  // BROWSER: Chrome、Safari、Edge、Firefox
+  // BROWSER: Chrome, Safari, Edge, Firefox
   if (name.includes("chrome") || name.includes("safari") || name.includes("edge") || name.includes("firefox")) {
     return "BROWSER";
   }
 
-  // COMMUNICATION: Slack、Discord など
+  // COMMUNICATION: Slack, Discord, etc.
   if (name.includes("slack") || name.includes("discord") || name.includes("teams") || name.includes("zoom")) {
     return "COMMUNICATION";
   }
@@ -56,6 +58,7 @@ export function calculateUsageSummary(
   const appSummary: Record<string, number> = {};
   const categorySummary: Record<AppCategory, number> = {
     WORK: 0,
+    PRODUCTIVITY: 0,
     BROWSER: 0,
     COMMUNICATION: 0,
     GAME: 0,
@@ -144,11 +147,20 @@ export function applyTaskRelevanceScores<T extends { category: AppCategory | str
 
 /**
  * カテゴリのタスク関連スコアを取得
+ * 
+ * 1.0  = WORK (タスク関連作業)
+ * 0.75 = PRODUCTIVITY (生産的だが関連性不明)
+ * 0.5  = COMMUNICATION (ニュートラル)
+ * 0.0  = ENTERTAINMENT (無関係)
+ * 0.0  = GAME (無関係)
+ * -1.0 = OTHER (不明、スコア計算から除外)
  */
 function getCategoryRelevanceScore(category: string): number {
   switch (category) {
     case "WORK":
-      return 1.0; // 直接タスク関連
+      return 1.0; // タスクに関連する作業
+    case "PRODUCTIVITY":
+      return 0.75; // 生産的だが関連性不明
     case "COMMUNICATION":
       return 0.5; // 中立 - 仕事関連または個人的かもしれない
     case "BROWSER":

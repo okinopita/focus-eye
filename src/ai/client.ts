@@ -238,42 +238,13 @@ export async function classifyOtherAppsWithAI(
 }
 
 /**
- * Mock classification for development/testing
- * Applies simple heuristic rules
+ * モック評価。現在はほぼ使用しない
  */
 function getMockClassification(
   otherApps: Array<{ app_name: string; seconds: number; window_titles_sample: string[] }>,
   taskTitle?: string
 ): Array<AppWithRelevanceScore> {
-  console.log("[AI] MOCK 分類を使用 (AWS 認証情報が利用不可)");
   const reclassified_apps = otherApps.map((app) => {
-    const name = app.app_name.toLowerCase();
-    const titles = (app.window_titles_sample || []).join(" ").toLowerCase();
-
-    console.log(`[AI Mock] 評価中: "${app.app_name}" | タイトル: ${titles || "(空)"}`);
-
-    // 単純なキーワードマッチング
-    if (name.includes("code") || name.includes("studio") || name.includes("xcode")) {
-      return { app_name: app.app_name, new_category: "WORK" };
-    }
-    if (name.includes("notion") || name.includes("word") || name.includes("excel")) {
-      return { app_name: app.app_name, new_category: "WORK" };
-    }
-    if (titles.includes("youtube") || titles.includes("netflix") || titles.includes("twitch")) {
-      return { app_name: app.app_name, new_category: "ENTERTAINMENT" };
-    }
-    if (titles.includes("github") || titles.includes("mdn") || titles.includes("stackoverflow")) {
-      return { app_name: app.app_name, new_category: "WORK" };
-    }
-    if (name.includes("slack") || name.includes("discord") || name.includes("teams")) {
-      return { app_name: app.app_name, new_category: "COMMUNICATION" };
-    }
-    if (name.includes("epic") || name.includes("game")) {
-      console.log(`[AI Mock] "${app.app_name}" が GAME キーワードにマッチ`);
-      return { app_name: app.app_name, new_category: "GAME" };
-    }
-
-    console.log(`[AI Mock] "${app.app_name}" -> OTHER (マッチなし)`);
     return { app_name: app.app_name, new_category: "OTHER" };
   });
 
@@ -299,7 +270,8 @@ function addRelevanceScores(
 /**
  * Determine task relevance score based on category
  * 
- * 1.0  = WORK (directly related to task)
+ * 1.0  = WORK (task-related work)
+ * 0.75 = PRODUCTIVITY (productive but relation unclear)
  * 0.5  = COMMUNICATION (neutral, may be related)
  * 0.0  = ENTERTAINMENT (unrelated to task)
  * -1.0 = OTHER (unknown, exclude from scoring)
@@ -307,7 +279,9 @@ function addRelevanceScores(
 function getRelevanceScoreForCategory(category: string): number {
   switch (category) {
     case "WORK":
-      return 1.0; // 直接タスク関連
+      return 1.0; // タスクに関連する作業
+    case "PRODUCTIVITY":
+      return 0.75; // 生産的だが関連性不明
     case "COMMUNICATION":
       return 0.5; // 中立 - 仕事関連または個人的かもしれない
     case "ENTERTAINMENT":

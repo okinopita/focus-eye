@@ -4,7 +4,7 @@
 
 あなたは **OTHER / BROWSER カテゴリ分類エンジン** です。
 
-ローカルアプリが分類できなかったアプリ（`OTHER`, `BROWSER`）を受け取り、適切なカテゴリに振り分けるのみです。
+（`OTHER`, `BROWSER`）カテゴリのアプリを受け取り、適切なカテゴリに振り分けるのみです。
 
 ### 重要な指針
 
@@ -56,7 +56,7 @@
   "reclassified_apps": [
     {
       "app_name": "アプリ名",
-      "new_category": "WORK | ENTERTAINMENT | COMMUNICATION | GAME | OTHER"
+      "new_category": "WORK | PRODUCTIVITY | ENTERTAINMENT | COMMUNICATION | GAME | OTHER"
     }
   ]
 }
@@ -67,11 +67,20 @@
 ## 分類ルール
 
 例：
-- タスク「React学習」+ タイトル「React Hooks – React公式ドキュメント」 → WORK ✓
-- タスク「React学習」+ タイトル「React入門 – YouTube」 → ENTERTAINMENT ✗（動画サイト）
-- タスク「JavaScript学習」+ タイトル「Google Chrome」 → OTHER ✗（タイトル不明瞭）
+- タスク「React学習」+ タイトル「React Hooks – React公式ドキュメント」 → WORK
+- タスク「React学習」+ タイトル「PHP: Documentation」 → PRODUCTIVITY
+- タスク「React学習」+ タイトル「React入門 – YouTube」 → ENTERTAINMENT（動画サイト）
+- タスク「JavaScript学習」+ タイトル「Google Chrome」 → OTHER（タイトル不明瞭）
 **タスク目的との関連度が高い場合：**
 **判定基準：ウィンドウタイトルとタスク目的が一致または強く関連している場合**
+
+### WORK（タスクに強く関連）
+
+- タスクに直接関連する開発・学習コンテンツ
+
+### PRODUCTIVITY（生産的だが関連性不明）
+
+- 作業ツールだがタスクとの直接的な関連が不明な場合
 
 ### ENTERTAINMENT（タスク無関係）
 

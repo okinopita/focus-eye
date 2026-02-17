@@ -3,6 +3,7 @@
  */
 import React, { useState, useEffect } from "react";
 import type { SessionResult, IpcSessionRequest, Goal, NewGoal, AppLog } from "../common/types";
+import { getCategoryDisplayName } from "../common/types";
 import GoalsStatsView from "./GoalsStatsView";
 
 declare global {
@@ -549,7 +550,7 @@ export default function App() {
                 className="w-4 h-4 rounded disabled:opacity-50"
               />
               <label htmlFor="automation" className="ml-2 text-sm text-slate-200">
-                ブラウザトラッキングを有効化 (AppleScript - 自動化権限が必要)
+                ブラウザトラッキングを有効化 (ブラウザへの自動化権限が必要です)
               </label>
             </div>
 
@@ -717,7 +718,7 @@ export default function App() {
                                     <span className="text-slate-300 text-sm">
                                       {isExpanded ? '▼' : '▶'}
                                     </span>
-                                    <span className="text-slate-100 font-semibold text-lg">{category}</span>
+                                    <span className="text-slate-100 font-semibold text-lg">{getCategoryDisplayName(category as any)}</span>
                                     <span className="text-slate-400 text-sm">({appsInCategory.length}個)</span>
                                   </div>
                                   <div className="flex items-center gap-4">

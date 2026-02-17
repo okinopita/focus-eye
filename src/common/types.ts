@@ -2,7 +2,7 @@
  * メイン・レンダラープロセス間での共有タイプ定義
  */
 
-export type AppCategory = "WORK" | "BROWSER" | "COMMUNICATION" | "GAME" | "ENTERTAINMENT" | "OTHER";
+export type AppCategory = "WORK" | "PRODUCTIVITY" | "BROWSER" | "COMMUNICATION" | "GAME" | "ENTERTAINMENT" | "OTHER";
 
 export interface AppLog {
   timestamp: number;
@@ -55,4 +55,20 @@ export interface NewGoal {
   start_date: number;
   end_date: number;
   is_active?: boolean;
+}
+
+/**
+ * カテゴリを日本語表示に変換
+ */
+export function getCategoryDisplayName(category: AppCategory): string {
+  const categoryMap: Record<AppCategory, string> = {
+    WORK: "作業（関連）",
+    PRODUCTIVITY: "作業（その他）",
+    BROWSER: "ブラウザ",
+    COMMUNICATION: "コミュニケーション",
+    GAME: "ゲーム",
+    ENTERTAINMENT: "エンタメ",
+    OTHER: "その他",
+  };
+  return categoryMap[category] || category;
 }
