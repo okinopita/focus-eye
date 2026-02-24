@@ -334,6 +334,9 @@ export class GoalRepository {
    * 有効な全ゴールを取得
    */
   findActive(): Goal[] {
+    // 期限切れゴールを自動的に無効化
+    this.deactivateExpiredGoals();
+    
     const result = this.db.exec(`SELECT * FROM goals WHERE is_active = 1 ORDER BY start_date DESC`);
     if (result.length === 0) return [];
     return result[0].values.map((row: SqlValue[]) => this.mapRowToGoal(row));
@@ -343,6 +346,9 @@ export class GoalRepository {
    * 全ゴールを取得（無効なものを含む）
    */
   findAll(): Goal[] {
+    // 期限切れゴールを自動的に無効化
+    this.deactivateExpiredGoals();
+    
     const result = this.db.exec(`SELECT * FROM goals ORDER BY start_date DESC`);
     if (result.length === 0) return [];
     return result[0].values.map((row: SqlValue[]) => this.mapRowToGoal(row));
@@ -402,6 +408,28 @@ export class GoalRepository {
       is_active: Boolean(row[5]),
       created_at: row[6] as number,
     };
+  }
+
+  /**
+   * 期限切れのゴールを自動的に無効化
+   */
+  private deactivateExpiredGoals(): void {
+    const now = Date.now();
+    
+    // 期限切れかつ有効なゴールを無効化
+    const result = this.db.exec(
+      `UPDATE goals SET is_active = 0 WHERE is_active = 1 AND end_date < ?`,
+      [now]
+    );
+    
+    // 更新があった場合はログ出力とDB保存
+    const changesResult = this.db.exec(`SELECT changes()`);
+    const changesCount = changesResult[0]?.values[0]?.[0] as number || 0;
+    
+    if (changesCount > 0) {
+      console.log(`[GoalRepository] ${changesCount}件の期限切れゴールを無効化しました`);
+      saveDatabaseToFile();
+    }
   }
 }
 

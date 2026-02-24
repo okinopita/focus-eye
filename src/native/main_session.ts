@@ -1,8 +1,8 @@
 import { setTimeout } from 'timers/promises';
 import { systemUtils, setUseAutomation } from './getForegroundApp.js';
+import { MIN_INTERVAL_MS } from '../common/consts.js';
 
 const SESSION_TIME = 50 * 1000; // セッション時間のミリ秒
-const MIN_INTERVAL_MS = 5000;
 // const MAX_INTERVAL_MS = 6000;
 
 type checked = {

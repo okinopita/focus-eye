@@ -3,6 +3,7 @@
  */
 import type { AppCategory } from "./types.js";
 import type { AIClassificationOutput, AppWithRelevanceScore } from "../ai/types.js";
+import { MIN_INTERVAL_MS } from "./consts.js";
 
 export function categorizeApp(
   appDisplayName: string,
@@ -85,7 +86,7 @@ export function calculateUsageSummary(
   // 最終ログエントリを追加（最後のエントリにはデフォルトの5秒間隔を使用）
   if (sorted.length > 0) {
     const last = sorted[sorted.length - 1];
-    const duration = 5000; // 最後のログには5秒
+    const duration = MIN_INTERVAL_MS; // 最後のログには5秒
     appSummary[last.appDisplayName] = (appSummary[last.appDisplayName] ?? 0) + duration;
     categorySummary[last.category] = (categorySummary[last.category] ?? 0) + duration;
   }
@@ -218,7 +219,7 @@ export function calculateTaskRelevanceMetrics(
       // 不明 - 計算から除外
       unknownTimeMs += deltaMs;
     } else if (score >= 0.5) {
-      // タスク関連（WORK、COMMUNICATION）
+      // タスク関連（WORK、PRODUCTIVITY、COMMUNICATION）
       taskRelevantTimeMs += deltaMs;
       totalScoredTimeMs += deltaMs;
       weightedScoreSum += score * deltaMs;
@@ -227,6 +228,28 @@ export function calculateTaskRelevanceMetrics(
       taskIrrelevantTimeMs += deltaMs;
       totalScoredTimeMs += deltaMs;
       weightedScoreSum += score * deltaMs;
+    }
+  }
+
+  // 最終ログエントリを追加（最後のエントリにはデフォルトの5秒間隔を使用）
+  if (sortedLogs.length > 0) {
+    const lastLog = sortedLogs[sortedLogs.length - 1];
+    const lastDuration = MIN_INTERVAL_MS; // 最後のログには5秒
+    const lastScore = lastLog.task_relevance_score ?? -1.0;
+
+    if (lastScore === -1.0) {
+      // 不明 - 計算から除外
+      unknownTimeMs += lastDuration;
+    } else if (lastScore >= 0.5) {
+      // タスク関連（WORK、PRODUCTIVITY、COMMUNICATION）
+      taskRelevantTimeMs += lastDuration;
+      totalScoredTimeMs += lastDuration;
+      weightedScoreSum += lastScore * lastDuration;
+    } else {
+      // タスク無関連（ENTERTAINMENT、GAME）
+      taskIrrelevantTimeMs += lastDuration;
+      totalScoredTimeMs += lastDuration;
+      weightedScoreSum += lastScore * lastDuration;
     }
   }
 

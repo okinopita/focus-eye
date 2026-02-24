@@ -1,0 +1,1 @@
+export const MIN_INTERVAL_MS = 5000; // チェック間隔（ミリ秒）

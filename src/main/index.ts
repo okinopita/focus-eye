@@ -13,6 +13,7 @@ import { classifyOtherAppsWithAI } from "../ai/client.js";
 import { initializeDatabase, closeDatabase, getDatabase } from "../db/database.js";
 import { SessionRepository, SettingsRepository, GoalRepository } from "../db/repositories.js";
 import type { IpcSessionRequest, IpcSessionResponse, AppLog, SessionResult } from "../common/types.js";
+import { MIN_INTERVAL_MS } from "../common/consts.js";
 
 // AWS認証情報のため .env ファイルをロード
 function loadEnv() {
@@ -243,7 +244,7 @@ ipcMain.handle("session:start", async (event, req: IpcSessionRequest): Promise<I
 
     const sessionStartTime = Date.now();
     const appLogs: AppLog[] = [];
-    const checkIntervalMs = 5000;
+    const checkIntervalMs = MIN_INTERVAL_MS;
 
     // セッション中のアプリケーションログを収集
     while (isSessionRunning && Date.now() - sessionStartTime < req.sessionTimeMs) {
