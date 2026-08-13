@@ -9,6 +9,7 @@ type checked = {
   appName: string;
   idleTime: number | string;
 }
+// てすとこめんと
 
 // /**
 //  * チェック間隔のミリ秒をランダムに生成する
